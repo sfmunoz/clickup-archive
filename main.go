@@ -6,7 +6,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/sfmunoz/logit"
 )
+
+var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 const baseURL = "https://api.clickup.com/api/v2"
 
@@ -52,25 +56,22 @@ func get(token, path string, out any) error {
 func main() {
 	token := os.Getenv("CLICKUP_TOKEN")
 	if token == "" {
-		fmt.Fprintln(os.Stderr, "CLICKUP_TOKEN env var is required")
-		os.Exit(1)
+		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
 
 	var teams TeamsResponse
 	if err := get(token, "/team", &teams); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to fetch workspaces: %v\n", err)
-		os.Exit(1)
+		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
 
 	for _, team := range teams.Teams {
-		fmt.Printf("Workspace: %s (id=%s)\n", team.Name, team.ID)
+		log.Info("Workspace", "name", team.Name, "id", team.ID)
 		var spaces SpacesResponse
 		if err := get(token, "/team/"+team.ID+"/space", &spaces); err != nil {
-			fmt.Fprintf(os.Stderr, "  failed to fetch spaces: %v\n", err)
-			continue
+			log.Fatal("Failed to fetch spaces", "err", err)
 		}
 		for _, space := range spaces.Spaces {
-			fmt.Printf("  Space: %s (id=%s)\n", space.Name, space.ID)
+			log.Info("Space", "name", space.Name, "id", space.ID)
 		}
 	}
 }
