@@ -48,6 +48,17 @@ func jsonDump(v any) error {
 	return nil
 }
 
+func getLists(token, folderID string) {
+	var resp api.ListsResponse
+	if err := get(token, "/folder/"+folderID+"/list", &resp); err != nil {
+		log.Fatal("Failed to fetch lists", "err", err)
+	}
+	for _, list := range resp.Lists {
+		log.Info("List", "name", list.Name, "id", list.ID)
+		jsonDump(list)
+	}
+}
+
 func getFolders(token, spaceID string) {
 	var resp api.FoldersResponse
 	if err := get(token, "/space/"+spaceID+"/folder", &resp); err != nil {
@@ -56,6 +67,7 @@ func getFolders(token, spaceID string) {
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "name", folder.Name, "id", folder.ID)
 		jsonDump(folder)
+		getLists(token, folder.ID)
 	}
 }
 
