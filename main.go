@@ -139,6 +139,15 @@ func get(token, path string, out any) error {
 	return json.Unmarshal(body, out)
 }
 
+func jsonDump(v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(data))
+	return nil
+}
+
 func main() {
 	token := os.Getenv("CLICKUP_TOKEN")
 	if token == "" {
@@ -150,12 +159,14 @@ func main() {
 	}
 	for _, team := range teams.Teams {
 		log.Info("Workspace", "name", team.Name, "id", team.ID)
+		jsonDump(team)
 		var spaces SpacesResponse
 		if err := get(token, "/team/"+team.ID+"/space", &spaces); err != nil {
 			log.Fatal("Failed to fetch spaces", "err", err)
 		}
 		for _, space := range spaces.Spaces {
 			log.Info("Space", "name", space.Name, "id", space.ID)
+			jsonDump(space)
 		}
 	}
 }
