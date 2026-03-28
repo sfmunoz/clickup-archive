@@ -1,14 +1,10 @@
 #!/bin/bash
-#
-# Date:   Sat Aug 30 09:40:48 AM UTC 2025
-# Issue:  https://github.com/sfmunoz/cms/issues/13
-#
 
-set -e
+set -e -o pipefail
 
 cd "$(dirname "$0")"
 
-[ "$HUGO_THEME" = "" ] && HUGO_THEME="headless"
+[ "$HUGO_THEME" = "" ] && HUGO_THEME="picocss"
 export HUGO_THEME
 
 MINIFY_FLAG="--minify"
@@ -19,4 +15,3 @@ set -x
 # cleanup: hugo doesn't do it
 rm -rf public
 hugo build --gc $MINIFY_FLAG --panicOnWarning "$@"
-

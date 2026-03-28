@@ -1,14 +1,10 @@
 #!/bin/bash
-#
-# Date:   Sat Aug 30 09:12:24 UTC 2025
-# Issue:  https://github.com/sfmunoz/cms/issues/11
-#
 
-set -e
+set -e -o pipefail
 
 cd "$(dirname "$0")"
 
-[ "$HUGO_THEME" = "" ] && HUGO_THEME="headless"
+[ "$HUGO_THEME" = "" ] && HUGO_THEME="picocss"
 export HUGO_THEME
 
 set -x
