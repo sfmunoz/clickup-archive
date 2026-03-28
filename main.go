@@ -76,16 +76,28 @@ func jsonDump(v any, dir string) error {
 	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
+func (c *Client) dumpTask(task api.Task, baseDir string) error {
+	log.Info("Task", "name", task.Name, "id", task.ID)
+	dir := filepath.Join(baseDir, task.ID)
+	if err := jsonDump(task, dir); err != nil {
+		return fmt.Errorf("dump task %s: %w", task.ID, err)
+	}
+	for _, sub := range task.Subtasks {
+		if err := c.dumpTask(sub, baseDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *Client) getTasks(listID, baseDir string) error {
 	var resp api.TasksResponse
-	if err := c.httpGet("/list/"+listID+"/task?include_closed=true", &resp); err != nil {
+	if err := c.httpGet("/list/"+listID+"/task?include_closed=true&subtasks=true", &resp); err != nil {
 		return fmt.Errorf("fetch tasks: %w", err)
 	}
 	for _, task := range resp.Tasks {
-		log.Info("Task", "name", task.Name, "id", task.ID)
-		dir := filepath.Join(baseDir, task.ID)
-		if err := jsonDump(task, dir); err != nil {
-			return fmt.Errorf("dump task %s: %w", task.ID, err)
+		if err := c.dumpTask(task, baseDir); err != nil {
+			return err
 		}
 	}
 	return nil
