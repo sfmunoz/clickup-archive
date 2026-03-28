@@ -72,55 +72,73 @@ func jsonDump(v any, dir string) error {
 	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
-func getLists(token, folderID, baseDir string) {
+func getLists(token, folderID, baseDir string) error {
 	var resp api.ListsResponse
 	if err := httpGet(token, "/folder/"+folderID+"/list", &resp); err != nil {
-		log.Fatal("Failed to fetch lists", "err", err)
+		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
 		log.Info("List", "name", list.Name, "id", list.ID)
 		dir := filepath.Join(baseDir, list.ID)
-		jsonDump(list, dir)
+		if err := jsonDump(list, dir); err != nil {
+			return fmt.Errorf("dump list %s: %w", list.ID, err)
+		}
 	}
+	return nil
 }
 
-func getFolders(token, spaceID, baseDir string) {
+func getFolders(token, spaceID, baseDir string) error {
 	var resp api.FoldersResponse
 	if err := httpGet(token, "/space/"+spaceID+"/folder", &resp); err != nil {
-		log.Fatal("Failed to fetch folders", "err", err)
+		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "name", folder.Name, "id", folder.ID)
 		dir := filepath.Join(baseDir, folder.ID)
-		jsonDump(folder, dir)
-		getLists(token, folder.ID, dir)
+		if err := jsonDump(folder, dir); err != nil {
+			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
+		}
+		if err := getLists(token, folder.ID, dir); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func getSpaces(token, workspaceID, baseDir string) {
+func getSpaces(token, workspaceID, baseDir string) error {
 	var resp api.SpacesResponse
 	if err := httpGet(token, "/team/"+workspaceID+"/space", &resp); err != nil {
-		log.Fatal("Failed to fetch spaces", "err", err)
+		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
 		log.Info("Space", "name", space.Name, "id", space.ID)
 		dir := filepath.Join(baseDir, space.ID)
-		jsonDump(space, dir)
-		getFolders(token, space.ID, dir)
+		if err := jsonDump(space, dir); err != nil {
+			return fmt.Errorf("dump space %s: %w", space.ID, err)
+		}
+		if err := getFolders(token, space.ID, dir); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func getWorkspaces(token, baseDir string) {
+func getWorkspaces(token, baseDir string) error {
 	var resp api.WorkspacesResponse
 	if err := httpGet(token, "/team", &resp); err != nil {
-		log.Fatal("Failed to fetch workspaces", "err", err)
+		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
 		dir := filepath.Join(baseDir, workspace.ID)
-		jsonDump(workspace, dir)
-		getSpaces(token, workspace.ID, dir)
+		if err := jsonDump(workspace, dir); err != nil {
+			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
+		}
+		if err := getSpaces(token, workspace.ID, dir); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func main() {
@@ -128,5 +146,7 @@ func main() {
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	getWorkspaces(token, outputDir)
+	if err := getWorkspaces(token, outputDir); err != nil {
+		log.Fatal("Failed", "err", err)
+	}
 }
