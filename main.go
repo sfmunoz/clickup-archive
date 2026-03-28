@@ -26,6 +26,7 @@ type Client struct {
 }
 
 func (c *Client) httpGetOnce(path string, out any) error {
+	time.Sleep(650 * time.Millisecond) // limit = 100 request/minute → 0.6 sec/request
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
 		return err
