@@ -43,19 +43,18 @@ func httpGetOnce(token, path string, out any) error {
 }
 
 func httpGet(token, path string, out any) error {
-	var lastErr error
-	for attempt := range httpGetRetries {
-		if attempt > 0 {
-			time.Sleep(httpGetRetryDelay)
+	for attempt := 1; attempt <= httpGetRetries; attempt++ {
+		err := httpGetOnce(token, path, out)
+		if err == nil {
+			break
 		}
-		if err := httpGetOnce(token, path, out); err != nil {
-			lastErr = err
-			log.Warn("httpGet failed, retrying", "attempt", attempt+1, "err", err)
-			continue
+		if attempt == httpGetRetries {
+			return err
 		}
-		return nil
+		log.Warn("httpGet failed, retrying", "attempt", attempt, "err", err)
+		time.Sleep(httpGetRetryDelay)
 	}
-	return lastErr
+	return nil
 }
 
 func jsonDump(v any, dir string) error {
