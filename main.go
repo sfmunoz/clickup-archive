@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 	"github.com/sfmunoz/logit"
@@ -17,8 +18,10 @@ var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 const outputDir = "output"
 const baseURL = "https://api.clickup.com/api/v2"
+const httpGetRetries = 5
+const httpGetRetryDelay = time.Second
 
-func httpGet(token, path string, out any) error {
+func httpGetOnce(token, path string, out any) error {
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
 		return err
@@ -28,8 +31,8 @@ func httpGet(token, path string, out any) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -37,6 +40,22 @@ func httpGet(token, path string, out any) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
 	}
 	return json.Unmarshal(body, out)
+}
+
+func httpGet(token, path string, out any) error {
+	var lastErr error
+	for attempt := range httpGetRetries {
+		if attempt > 0 {
+			time.Sleep(httpGetRetryDelay)
+		}
+		if err := httpGetOnce(token, path, out); err != nil {
+			lastErr = err
+			log.Warn("httpGet failed, retrying", "attempt", attempt+1, "err", err)
+			continue
+		}
+		return nil
+	}
+	return lastErr
 }
 
 func jsonDump(v any, dir string) error {
