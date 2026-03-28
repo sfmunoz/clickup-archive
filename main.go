@@ -78,7 +78,7 @@ func jsonDump(v any, dir string) error {
 
 func (c *Client) getTasks(listID, baseDir string) error {
 	var resp api.TasksResponse
-	if err := c.httpGet("/list/"+listID+"/task", &resp); err != nil {
+	if err := c.httpGet("/list/"+listID+"/task?include_closed=true", &resp); err != nil {
 		return fmt.Errorf("fetch tasks: %w", err)
 	}
 	for _, task := range resp.Tasks {
