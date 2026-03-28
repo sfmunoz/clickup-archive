@@ -16,7 +16,6 @@ var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 const baseURL = "https://api.clickup.com/api/v2"
 
-
 func get(token, path string, out any) error {
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
@@ -43,7 +42,7 @@ func jsonDump(v any) error {
 	if err != nil {
 		return err
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		log.Info(line)
 	}
 	return nil
