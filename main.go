@@ -15,7 +15,7 @@ var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 const baseURL = "https://api.clickup.com/api/v2"
 
-type TeamMemberUser struct {
+type WorkspaceMemberUser struct {
 	ID                int    `json:"id"`
 	Username          string `json:"username"`
 	Email             string `json:"email"`
@@ -27,20 +27,20 @@ type TeamMemberUser struct {
 	Timezone          string `json:"timezone"`
 }
 
-type TeamMember struct {
-	User TeamMemberUser `json:"user"`
+type WorkspaceMember struct {
+	User WorkspaceMemberUser `json:"user"`
 }
 
-type Team struct {
-	ID      string       `json:"id"`
-	Name    string       `json:"name"`
-	Color   string       `json:"color"`
-	Avatar  string       `json:"avatar"`
-	Members []TeamMember `json:"members"`
+type Workspace struct {
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Color   string            `json:"color"`
+	Avatar  string            `json:"avatar"`
+	Members []WorkspaceMember `json:"members"`
 }
 
-type TeamsResponse struct {
-	Teams []Team `json:"teams"`
+type WorkspacesResponse struct {
+	Workspaces []Workspace `json:"teams"`
 }
 
 type SpaceStatus struct {
@@ -156,15 +156,15 @@ func main() {
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	var teams TeamsResponse
-	if err := get(token, "/team", &teams); err != nil {
+	var workspaces WorkspacesResponse
+	if err := get(token, "/team", &workspaces); err != nil {
 		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
-	for _, team := range teams.Teams {
-		log.Info("Workspace", "name", team.Name, "id", team.ID)
-		jsonDump(team)
+	for _, workspace := range workspaces.Workspaces {
+		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
+		jsonDump(workspace)
 		var spaces SpacesResponse
-		if err := get(token, "/team/"+team.ID+"/space", &spaces); err != nil {
+		if err := get(token, "/team/"+workspace.ID+"/space", &spaces); err != nil {
 			log.Fatal("Failed to fetch spaces", "err", err)
 		}
 		for _, space := range spaces.Spaces {
