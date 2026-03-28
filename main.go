@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -37,49 +38,55 @@ func get(token, path string, out any) error {
 	return json.Unmarshal(body, out)
 }
 
-func jsonDump(v any) error {
+func jsonDump(v any, dir string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
 	for line := range strings.SplitSeq(string(data), "\n") {
-		log.Info(line)
+		log.Debug(line)
 	}
-	return nil
+	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
-func getLists(token, folderID string) {
+func getLists(token, folderID, baseDir string) {
 	var resp api.ListsResponse
 	if err := get(token, "/folder/"+folderID+"/list", &resp); err != nil {
 		log.Fatal("Failed to fetch lists", "err", err)
 	}
 	for _, list := range resp.Lists {
 		log.Info("List", "name", list.Name, "id", list.ID)
-		jsonDump(list)
+		dir := filepath.Join(baseDir, list.ID)
+		jsonDump(list, dir)
 	}
 }
 
-func getFolders(token, spaceID string) {
+func getFolders(token, spaceID, baseDir string) {
 	var resp api.FoldersResponse
 	if err := get(token, "/space/"+spaceID+"/folder", &resp); err != nil {
 		log.Fatal("Failed to fetch folders", "err", err)
 	}
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "name", folder.Name, "id", folder.ID)
-		jsonDump(folder)
-		getLists(token, folder.ID)
+		dir := filepath.Join(baseDir, folder.ID)
+		jsonDump(folder, dir)
+		getLists(token, folder.ID, dir)
 	}
 }
 
-func getSpaces(token, workspaceID string) {
+func getSpaces(token, workspaceID, baseDir string) {
 	var resp api.SpacesResponse
 	if err := get(token, "/team/"+workspaceID+"/space", &resp); err != nil {
 		log.Fatal("Failed to fetch spaces", "err", err)
 	}
 	for _, space := range resp.Spaces {
 		log.Info("Space", "name", space.Name, "id", space.ID)
-		jsonDump(space)
-		getFolders(token, space.ID)
+		dir := filepath.Join(baseDir, space.ID)
+		jsonDump(space, dir)
+		getFolders(token, space.ID, dir)
 	}
 }
 
@@ -88,10 +95,12 @@ func getWorkspaces(token string) {
 	if err := get(token, "/team", &resp); err != nil {
 		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
+	baseDir := "output"
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
-		jsonDump(workspace)
-		getSpaces(token, workspace.ID)
+		dir := filepath.Join(baseDir, workspace.ID)
+		jsonDump(workspace, dir)
+		getSpaces(token, workspace.ID, dir)
 	}
 }
 
