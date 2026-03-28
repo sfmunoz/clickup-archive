@@ -8,40 +8,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sfmunoz/clickup-archive/internal/api"
 	"github.com/sfmunoz/logit"
 )
 
 var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 const baseURL = "https://api.clickup.com/api/v2"
-
-type WorkspaceMemberUser struct {
-	ID                int    `json:"id"`
-	Username          string `json:"username"`
-	Email             string `json:"email"`
-	Color             string `json:"color"`
-	ProfilePicture    string `json:"profilePicture"`
-	Initials          string `json:"initials"`
-	WeekStartDay      int    `json:"week_start_day"`
-	GlobalFontSupport bool   `json:"global_font_support"`
-	Timezone          string `json:"timezone"`
-}
-
-type WorkspaceMember struct {
-	User WorkspaceMemberUser `json:"user"`
-}
-
-type Workspace struct {
-	ID      string            `json:"id"`
-	Name    string            `json:"name"`
-	Color   string            `json:"color"`
-	Avatar  string            `json:"avatar"`
-	Members []WorkspaceMember `json:"members"`
-}
-
-type WorkspacesResponse struct {
-	Workspaces []Workspace `json:"teams"`
-}
 
 type SpaceStatus struct {
 	ID         string `json:"id"`
@@ -156,7 +129,7 @@ func main() {
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	var workspaces WorkspacesResponse
+	var workspaces api.WorkspacesResponse
 	if err := get(token, "/team", &workspaces); err != nil {
 		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
