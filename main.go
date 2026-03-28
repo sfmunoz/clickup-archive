@@ -67,6 +67,14 @@ func main() {
 		for _, space := range spaces.Spaces {
 			log.Info("Space", "name", space.Name, "id", space.ID)
 			jsonDump(space)
+			var folders api.FoldersResponse
+			if err := get(token, "/space/"+space.ID+"/folder", &folders); err != nil {
+				log.Fatal("Failed to fetch folders", "err", err)
+			}
+			for _, folder := range folders.Folders {
+				log.Info("Folder", "name", folder.Name, "id", folder.ID)
+				jsonDump(folder)
+			}
 		}
 	}
 }
