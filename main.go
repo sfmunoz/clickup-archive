@@ -21,12 +21,16 @@ const baseURL = "https://api.clickup.com/api/v2"
 const httpGetRetries = 5
 const httpGetRetryDelay = time.Second
 
-func httpGetOnce(token, path string, out any) error {
+type Client struct {
+	token string
+}
+
+func (c *Client) httpGetOnce(path string, out any) error {
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", c.token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -42,9 +46,9 @@ func httpGetOnce(token, path string, out any) error {
 	return json.Unmarshal(body, out)
 }
 
-func httpGet(token, path string, out any) error {
+func (c *Client) httpGet(path string, out any) error {
 	for attempt := 1; attempt <= httpGetRetries; attempt++ {
-		err := httpGetOnce(token, path, out)
+		err := c.httpGetOnce(path, out)
 		if err == nil {
 			break
 		}
@@ -71,9 +75,9 @@ func jsonDump(v any, dir string) error {
 	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
-func getLists(token, folderID, baseDir string) error {
+func (c *Client) getLists(folderID, baseDir string) error {
 	var resp api.ListsResponse
-	if err := httpGet(token, "/folder/"+folderID+"/list", &resp); err != nil {
+	if err := c.httpGet("/folder/"+folderID+"/list", &resp); err != nil {
 		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
@@ -86,9 +90,9 @@ func getLists(token, folderID, baseDir string) error {
 	return nil
 }
 
-func getFolders(token, spaceID, baseDir string) error {
+func (c *Client) getFolders(spaceID, baseDir string) error {
 	var resp api.FoldersResponse
-	if err := httpGet(token, "/space/"+spaceID+"/folder", &resp); err != nil {
+	if err := c.httpGet("/space/"+spaceID+"/folder", &resp); err != nil {
 		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
@@ -97,16 +101,16 @@ func getFolders(token, spaceID, baseDir string) error {
 		if err := jsonDump(folder, dir); err != nil {
 			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
 		}
-		if err := getLists(token, folder.ID, dir); err != nil {
+		if err := c.getLists(folder.ID, dir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func getSpaces(token, workspaceID, baseDir string) error {
+func (c *Client) getSpaces(workspaceID, baseDir string) error {
 	var resp api.SpacesResponse
-	if err := httpGet(token, "/team/"+workspaceID+"/space", &resp); err != nil {
+	if err := c.httpGet("/team/"+workspaceID+"/space", &resp); err != nil {
 		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
@@ -115,16 +119,16 @@ func getSpaces(token, workspaceID, baseDir string) error {
 		if err := jsonDump(space, dir); err != nil {
 			return fmt.Errorf("dump space %s: %w", space.ID, err)
 		}
-		if err := getFolders(token, space.ID, dir); err != nil {
+		if err := c.getFolders(space.ID, dir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func getWorkspaces(token, baseDir string) error {
+func (c *Client) getWorkspaces(baseDir string) error {
 	var resp api.WorkspacesResponse
-	if err := httpGet(token, "/team", &resp); err != nil {
+	if err := c.httpGet("/team", &resp); err != nil {
 		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {
@@ -133,7 +137,7 @@ func getWorkspaces(token, baseDir string) error {
 		if err := jsonDump(workspace, dir); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}
-		if err := getSpaces(token, workspace.ID, dir); err != nil {
+		if err := c.getSpaces(workspace.ID, dir); err != nil {
 			return err
 		}
 	}
@@ -145,7 +149,8 @@ func main() {
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	if err := getWorkspaces(token, outputDir); err != nil {
+	c := &Client{token: token}
+	if err := c.getWorkspaces(outputDir); err != nil {
 		log.Fatal("Failed", "err", err)
 	}
 }
