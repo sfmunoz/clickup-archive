@@ -1,5 +1,7 @@
 # clickup-archive
 
+> 🚧 Early development — not yet functional.
+
 A CLI tool to export and archive your ClickUp workspace data locally.
 
 ## Purpose
