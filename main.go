@@ -15,6 +15,7 @@ import (
 
 var log = logit.Logit().WithLevel(logit.LevelInfo)
 
+const outputDir = "output"
 const baseURL = "https://api.clickup.com/api/v2"
 
 func get(token, path string, out any) error {
@@ -90,12 +91,11 @@ func getSpaces(token, workspaceID, baseDir string) {
 	}
 }
 
-func getWorkspaces(token string) {
+func getWorkspaces(token, baseDir string) {
 	var resp api.WorkspacesResponse
 	if err := get(token, "/team", &resp); err != nil {
 		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
-	baseDir := "output"
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
 		dir := filepath.Join(baseDir, workspace.ID)
@@ -109,5 +109,5 @@ func main() {
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	getWorkspaces(token)
+	getWorkspaces(token, outputDir)
 }
