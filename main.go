@@ -18,7 +18,7 @@ var log = logit.Logit().WithLevel(logit.LevelInfo)
 const outputDir = "output"
 const baseURL = "https://api.clickup.com/api/v2"
 
-func get(token, path string, out any) error {
+func httpGet(token, path string, out any) error {
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func jsonDump(v any, dir string) error {
 
 func getLists(token, folderID, baseDir string) {
 	var resp api.ListsResponse
-	if err := get(token, "/folder/"+folderID+"/list", &resp); err != nil {
+	if err := httpGet(token, "/folder/"+folderID+"/list", &resp); err != nil {
 		log.Fatal("Failed to fetch lists", "err", err)
 	}
 	for _, list := range resp.Lists {
@@ -67,7 +67,7 @@ func getLists(token, folderID, baseDir string) {
 
 func getFolders(token, spaceID, baseDir string) {
 	var resp api.FoldersResponse
-	if err := get(token, "/space/"+spaceID+"/folder", &resp); err != nil {
+	if err := httpGet(token, "/space/"+spaceID+"/folder", &resp); err != nil {
 		log.Fatal("Failed to fetch folders", "err", err)
 	}
 	for _, folder := range resp.Folders {
@@ -80,7 +80,7 @@ func getFolders(token, spaceID, baseDir string) {
 
 func getSpaces(token, workspaceID, baseDir string) {
 	var resp api.SpacesResponse
-	if err := get(token, "/team/"+workspaceID+"/space", &resp); err != nil {
+	if err := httpGet(token, "/team/"+workspaceID+"/space", &resp); err != nil {
 		log.Fatal("Failed to fetch spaces", "err", err)
 	}
 	for _, space := range resp.Spaces {
@@ -93,7 +93,7 @@ func getSpaces(token, workspaceID, baseDir string) {
 
 func getWorkspaces(token, baseDir string) {
 	var resp api.WorkspacesResponse
-	if err := get(token, "/team", &resp); err != nil {
+	if err := httpGet(token, "/team", &resp); err != nil {
 		log.Fatal("Failed to fetch workspaces", "err", err)
 	}
 	for _, workspace := range resp.Workspaces {
