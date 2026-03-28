@@ -76,6 +76,21 @@ func jsonDump(v any, dir string) error {
 	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
+func (c *Client) getTasks(listID, baseDir string) error {
+	var resp api.TasksResponse
+	if err := c.httpGet("/list/"+listID+"/task", &resp); err != nil {
+		return fmt.Errorf("fetch tasks: %w", err)
+	}
+	for _, task := range resp.Tasks {
+		log.Info("Task", "name", task.Name, "id", task.ID)
+		dir := filepath.Join(baseDir, task.ID)
+		if err := jsonDump(task, dir); err != nil {
+			return fmt.Errorf("dump task %s: %w", task.ID, err)
+		}
+	}
+	return nil
+}
+
 func (c *Client) getLists(folderID, baseDir string) error {
 	var resp api.ListsResponse
 	if err := c.httpGet("/folder/"+folderID+"/list", &resp); err != nil {
@@ -86,6 +101,9 @@ func (c *Client) getLists(folderID, baseDir string) error {
 		dir := filepath.Join(baseDir, list.ID)
 		if err := jsonDump(list, dir); err != nil {
 			return fmt.Errorf("dump list %s: %w", list.ID, err)
+		}
+		if err := c.getTasks(list.ID, dir); err != nil {
+			return err
 		}
 	}
 	return nil
