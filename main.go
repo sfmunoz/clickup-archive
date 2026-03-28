@@ -48,33 +48,45 @@ func jsonDump(v any) error {
 	return nil
 }
 
+func getFolders(token, spaceID string) {
+	var resp api.FoldersResponse
+	if err := get(token, "/space/"+spaceID+"/folder", &resp); err != nil {
+		log.Fatal("Failed to fetch folders", "err", err)
+	}
+	for _, folder := range resp.Folders {
+		log.Info("Folder", "name", folder.Name, "id", folder.ID)
+		jsonDump(folder)
+	}
+}
+
+func getSpaces(token, workspaceID string) {
+	var resp api.SpacesResponse
+	if err := get(token, "/team/"+workspaceID+"/space", &resp); err != nil {
+		log.Fatal("Failed to fetch spaces", "err", err)
+	}
+	for _, space := range resp.Spaces {
+		log.Info("Space", "name", space.Name, "id", space.ID)
+		jsonDump(space)
+		getFolders(token, space.ID)
+	}
+}
+
+func getWorkspaces(token string) {
+	var resp api.WorkspacesResponse
+	if err := get(token, "/team", &resp); err != nil {
+		log.Fatal("Failed to fetch workspaces", "err", err)
+	}
+	for _, workspace := range resp.Workspaces {
+		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
+		jsonDump(workspace)
+		getSpaces(token, workspace.ID)
+	}
+}
+
 func main() {
 	token := os.Getenv("CLICKUP_TOKEN")
 	if token == "" {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
-	var workspaces api.WorkspacesResponse
-	if err := get(token, "/team", &workspaces); err != nil {
-		log.Fatal("Failed to fetch workspaces", "err", err)
-	}
-	for _, workspace := range workspaces.Workspaces {
-		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
-		jsonDump(workspace)
-		var spaces api.SpacesResponse
-		if err := get(token, "/team/"+workspace.ID+"/space", &spaces); err != nil {
-			log.Fatal("Failed to fetch spaces", "err", err)
-		}
-		for _, space := range spaces.Spaces {
-			log.Info("Space", "name", space.Name, "id", space.ID)
-			jsonDump(space)
-			var folders api.FoldersResponse
-			if err := get(token, "/space/"+space.ID+"/folder", &folders); err != nil {
-				log.Fatal("Failed to fetch folders", "err", err)
-			}
-			for _, folder := range folders.Folders {
-				log.Info("Folder", "name", folder.Name, "id", folder.ID)
-				jsonDump(folder)
-			}
-		}
-	}
+	getWorkspaces(token)
 }
