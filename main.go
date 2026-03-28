@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/sfmunoz/logit"
 )
@@ -144,7 +145,9 @@ func jsonDump(v any) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(data))
+	for _, line := range strings.Split(string(data), "\n") {
+		log.Info(line)
+	}
 	return nil
 }
 
