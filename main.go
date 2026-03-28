@@ -91,13 +91,19 @@ func (c *Client) dumpTask(task api.Task, baseDir string) error {
 }
 
 func (c *Client) getTasks(listID, baseDir string) error {
-	var resp api.TasksResponse
-	if err := c.httpGet("/list/"+listID+"/task?include_closed=true&subtasks=true", &resp); err != nil {
-		return fmt.Errorf("fetch tasks: %w", err)
-	}
-	for _, task := range resp.Tasks {
-		if err := c.dumpTask(task, baseDir); err != nil {
-			return err
+	for page := 0; ; page++ {
+		var resp api.TasksResponse
+		path := fmt.Sprintf("/list/%s/task?include_closed=true&subtasks=true&page=%d", listID, page)
+		if err := c.httpGet(path, &resp); err != nil {
+			return fmt.Errorf("fetch tasks page %d: %w", page, err)
+		}
+		for _, task := range resp.Tasks {
+			if err := c.dumpTask(task, baseDir); err != nil {
+				return err
+			}
+		}
+		if len(resp.Tasks) == 0 {
+			break
 		}
 	}
 	return nil
