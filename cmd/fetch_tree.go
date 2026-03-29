@@ -18,11 +18,11 @@ Subtasks are stored alongside top-level tasks, not nested under them.
 
 Requires the CLICKUP_TOKEN environment variable (personal API token).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := fetch.NewFetchTree()
+		f, err := fetch.NewFetchTree(clickupDir())
 		if err != nil {
 			return err
 		}
-		return f.Run(clickupDir())
+		return f.Run()
 	},
 }
 

@@ -8,15 +8,19 @@ import (
 )
 
 type FetchTree struct {
-	client *Client
+	clickupDir string
+	client     *Client
 }
 
-func NewFetchTree() (*FetchTree, error) {
+func NewFetchTree(clickupDir string) (*FetchTree, error) {
 	client, err := NewClient()
 	if err != nil {
 		return nil, err
 	}
-	return &FetchTree{client: client}, nil
+	return &FetchTree{
+		clickupDir: clickupDir,
+		client:     client,
+	}, nil
 }
 
 func (f *FetchTree) dumpTask(task api.Task, baseDir string) error {
@@ -106,14 +110,14 @@ func (f *FetchTree) getSpaces(workspaceID, baseDir string) error {
 	return nil
 }
 
-func (f *FetchTree) Run(baseDir string) error {
+func (f *FetchTree) Run() error {
 	var resp api.WorkspacesResponse
 	if err := f.client.HttpGet("/team", &resp); err != nil {
 		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		dir := filepath.Join(baseDir, workspace.ID)
+		dir := filepath.Join(f.clickupDir, workspace.ID)
 		if err := jsonDump(workspace, dir); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}
