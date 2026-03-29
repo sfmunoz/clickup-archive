@@ -11,9 +11,12 @@ type FetchTree struct {
 	client *Client
 }
 
-func NewFetchTree(token string) *FetchTree {
-	client := NewClient(token)
-	return &FetchTree{client: client}
+func NewFetchTree() (*FetchTree, error) {
+	client, err := NewClient()
+	if err != nil {
+		return nil, err
+	}
+	return &FetchTree{client: client}, nil
 }
 
 func (f *FetchTree) dumpTask(task api.Task, baseDir string) error {

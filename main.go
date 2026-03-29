@@ -14,11 +14,10 @@ var (
 )
 
 func main() {
-	token := os.Getenv("CLICKUP_TOKEN")
-	if token == "" {
-		log.Fatal("CLICKUP_TOKEN env var is required")
+	f, err := fetch.NewFetchTree()
+	if err != nil {
+		log.Fatal("Failed", "err", err)
 	}
-	f := fetch.NewFetchTree(token)
 	if err := f.Run(outputDir); err != nil {
 		log.Fatal("Failed", "err", err)
 	}

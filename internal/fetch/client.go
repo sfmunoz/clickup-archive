@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/sfmunoz/logit"
@@ -22,8 +23,12 @@ type Client struct {
 	token string
 }
 
-func NewClient(token string) *Client {
-	return &Client{token: token}
+func NewClient() (*Client, error) {
+	token := os.Getenv("CLICKUP_TOKEN")
+	if token == "" {
+		return nil, fmt.Errorf("CLICKUP_TOKEN env var is required")
+	}
+	return &Client{token: token}, nil
 }
 
 func (c *Client) httpGetOnce(path string, out any) error {
