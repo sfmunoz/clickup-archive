@@ -22,21 +22,21 @@ const (
 	httpGetRetryDelay = time.Second
 )
 
-type Client struct {
+type FetchTree struct {
 	token string
 }
 
-func NewClient(token string) *Client {
-	return &Client{token: token}
+func NewFetchTree(token string) *FetchTree {
+	return &FetchTree{token: token}
 }
 
-func (c *Client) httpGetOnce(path string, out any) error {
+func (f *FetchTree) httpGetOnce(path string, out any) error {
 	time.Sleep(650 * time.Millisecond) // limit = 100 request/minute → 0.6 sec/request
 	req, err := http.NewRequest("GET", baseURL+path, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", c.token)
+	req.Header.Set("Authorization", f.token)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -52,9 +52,9 @@ func (c *Client) httpGetOnce(path string, out any) error {
 	return json.Unmarshal(body, out)
 }
 
-func (c *Client) httpGet(path string, out any) error {
+func (f *FetchTree) httpGet(path string, out any) error {
 	for attempt := 1; attempt <= httpGetRetries; attempt++ {
-		err := c.httpGetOnce(path, out)
+		err := f.httpGetOnce(path, out)
 		if err == nil {
 			break
 		}
@@ -81,29 +81,29 @@ func jsonDump(v any, dir string) error {
 	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
-func (c *Client) dumpTask(task api.Task, baseDir string) error {
+func (f *FetchTree) dumpTask(task api.Task, baseDir string) error {
 	log.Info("Task", "id", task.ID, "name", task.Name)
 	dir := filepath.Join(baseDir, task.ID)
 	if err := jsonDump(task, dir); err != nil {
 		return fmt.Errorf("dump task %s: %w", task.ID, err)
 	}
 	for _, sub := range task.Subtasks {
-		if err := c.dumpTask(sub, baseDir); err != nil {
+		if err := f.dumpTask(sub, baseDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Client) getTasks(listID, baseDir string) error {
+func (f *FetchTree) getTasks(listID, baseDir string) error {
 	for page := 0; ; page++ {
 		var resp api.TasksResponse
 		path := fmt.Sprintf("/list/%s/task?include_closed=true&subtasks=true&page=%d", listID, page)
-		if err := c.httpGet(path, &resp); err != nil {
+		if err := f.httpGet(path, &resp); err != nil {
 			return fmt.Errorf("fetch tasks page %d: %w", page, err)
 		}
 		for _, task := range resp.Tasks {
-			if err := c.dumpTask(task, baseDir); err != nil {
+			if err := f.dumpTask(task, baseDir); err != nil {
 				return err
 			}
 		}
@@ -114,9 +114,9 @@ func (c *Client) getTasks(listID, baseDir string) error {
 	return nil
 }
 
-func (c *Client) getLists(folderID, baseDir string) error {
+func (f *FetchTree) getLists(folderID, baseDir string) error {
 	var resp api.ListsResponse
-	if err := c.httpGet("/folder/"+folderID+"/list", &resp); err != nil {
+	if err := f.httpGet("/folder/"+folderID+"/list", &resp); err != nil {
 		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
@@ -125,16 +125,16 @@ func (c *Client) getLists(folderID, baseDir string) error {
 		if err := jsonDump(list, dir); err != nil {
 			return fmt.Errorf("dump list %s: %w", list.ID, err)
 		}
-		if err := c.getTasks(list.ID, dir); err != nil {
+		if err := f.getTasks(list.ID, dir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Client) getFolders(spaceID, baseDir string) error {
+func (f *FetchTree) getFolders(spaceID, baseDir string) error {
 	var resp api.FoldersResponse
-	if err := c.httpGet("/space/"+spaceID+"/folder", &resp); err != nil {
+	if err := f.httpGet("/space/"+spaceID+"/folder", &resp); err != nil {
 		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
@@ -143,16 +143,16 @@ func (c *Client) getFolders(spaceID, baseDir string) error {
 		if err := jsonDump(folder, dir); err != nil {
 			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
 		}
-		if err := c.getLists(folder.ID, dir); err != nil {
+		if err := f.getLists(folder.ID, dir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Client) getSpaces(workspaceID, baseDir string) error {
+func (f *FetchTree) getSpaces(workspaceID, baseDir string) error {
 	var resp api.SpacesResponse
-	if err := c.httpGet("/team/"+workspaceID+"/space", &resp); err != nil {
+	if err := f.httpGet("/team/"+workspaceID+"/space", &resp); err != nil {
 		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
@@ -161,16 +161,16 @@ func (c *Client) getSpaces(workspaceID, baseDir string) error {
 		if err := jsonDump(space, dir); err != nil {
 			return fmt.Errorf("dump space %s: %w", space.ID, err)
 		}
-		if err := c.getFolders(space.ID, dir); err != nil {
+		if err := f.getFolders(space.ID, dir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Client) GetWorkspaces(baseDir string) error {
+func (f *FetchTree) GetWorkspaces(baseDir string) error {
 	var resp api.WorkspacesResponse
-	if err := c.httpGet("/team", &resp); err != nil {
+	if err := f.httpGet("/team", &resp); err != nil {
 		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {
@@ -179,7 +179,7 @@ func (c *Client) GetWorkspaces(baseDir string) error {
 		if err := jsonDump(workspace, dir); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}
-		if err := c.getSpaces(workspace.ID, dir); err != nil {
+		if err := f.getSpaces(workspace.ID, dir); err != nil {
 			return err
 		}
 	}
