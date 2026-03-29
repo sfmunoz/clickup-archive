@@ -2,9 +2,14 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
+
+func clickupDir() string {
+	return filepath.Join(os.Getenv("HOME"), "src", "clickup")
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "clickup-archive",
