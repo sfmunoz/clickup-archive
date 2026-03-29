@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -65,20 +63,6 @@ func (f *FetchTree) httpGet(path string, out any) error {
 		time.Sleep(httpGetRetryDelay)
 	}
 	return nil
-}
-
-func jsonDump(v any, dir string) error {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return err
-	}
-	for line := range strings.SplitSeq(string(data), "\n") {
-		log.Debug(line)
-	}
-	return os.WriteFile(filepath.Join(dir, "index.json"), data, 0o644)
 }
 
 func (f *FetchTree) dumpTask(task api.Task, baseDir string) error {
