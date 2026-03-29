@@ -81,7 +81,7 @@ func jsonDump(v any, dir string) error {
 }
 
 func (c *Client) dumpTask(task api.Task, baseDir string) error {
-	log.Info("Task", "name", task.Name, "id", task.ID)
+	log.Info("Task", "id", task.ID, "name", task.Name)
 	dir := filepath.Join(baseDir, task.ID)
 	if err := jsonDump(task, dir); err != nil {
 		return fmt.Errorf("dump task %s: %w", task.ID, err)
@@ -119,7 +119,7 @@ func (c *Client) getLists(folderID, baseDir string) error {
 		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
-		log.Info("List", "name", list.Name, "id", list.ID)
+		log.Info("List", "id", list.ID, "name", list.Name)
 		dir := filepath.Join(baseDir, list.ID)
 		if err := jsonDump(list, dir); err != nil {
 			return fmt.Errorf("dump list %s: %w", list.ID, err)
@@ -137,7 +137,7 @@ func (c *Client) getFolders(spaceID, baseDir string) error {
 		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
-		log.Info("Folder", "name", folder.Name, "id", folder.ID)
+		log.Info("Folder", "id", folder.ID, "name", folder.Name)
 		dir := filepath.Join(baseDir, folder.ID)
 		if err := jsonDump(folder, dir); err != nil {
 			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
@@ -155,7 +155,7 @@ func (c *Client) getSpaces(workspaceID, baseDir string) error {
 		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
-		log.Info("Space", "name", space.Name, "id", space.ID)
+		log.Info("Space", "id", space.ID, "name", space.Name)
 		dir := filepath.Join(baseDir, space.ID)
 		if err := jsonDump(space, dir); err != nil {
 			return fmt.Errorf("dump space %s: %w", space.ID, err)
@@ -173,7 +173,7 @@ func (c *Client) getWorkspaces(baseDir string) error {
 		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {
-		log.Info("Workspace", "name", workspace.Name, "id", workspace.ID)
+		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
 		dir := filepath.Join(baseDir, workspace.ID)
 		if err := jsonDump(workspace, dir); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
