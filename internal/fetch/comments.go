@@ -29,12 +29,13 @@ func NewFetchComments(clickupDir string) (*FetchComments, error) {
 func (f *FetchComments) fetchAllComments(taskID, commentsDir string) (int, error) {
 	log.Info("Fetching comments", "task_id", taskID)
 	startID := ""
+	startDate := ""
 	total := 0
 	for {
 		var resp api.CommentsResponse
 		path := "/task/" + taskID + "/comment"
 		if startID != "" {
-			path += "?start_id=" + startID
+			path += "?start=" + startDate + "&start_id=" + startID
 		}
 		log.Info("fetching", "path", path)
 		if err := f.client.HttpGet(path, &resp); err != nil {
@@ -50,7 +51,9 @@ func (f *FetchComments) fetchAllComments(taskID, commentsDir string) (int, error
 			}
 		}
 		total += len(resp.Comments)
-		startID = resp.Comments[len(resp.Comments)-1].ID
+		last := resp.Comments[len(resp.Comments)-1]
+		startID = last.ID
+		startDate = last.Date
 	}
 	return total, nil
 }
