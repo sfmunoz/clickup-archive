@@ -98,12 +98,10 @@ func (g *GenerateContent) processWorkspace(dir string) error {
 		return fmt.Errorf("read workspace: %w", err)
 	}
 	log.Info("Workspace", "id", w.ID, "name", w.Name)
-
 	children, err := readChildren(dir)
 	if err != nil {
 		return fmt.Errorf("list spaces: %w", err)
 	}
-
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "---\n")
 	fmt.Fprintf(&sb, "title: %s\n", yamlStr(w.Name))
@@ -116,19 +114,9 @@ func (g *GenerateContent) processWorkspace(dir string) error {
 		fmt.Fprintf(&sb, "avatar: %s\n", yamlStr(w.Avatar))
 	}
 	fmt.Fprintf(&sb, "---\n\n")
-
-	if len(children) > 0 {
-		fmt.Fprintf(&sb, "## Spaces\n\n")
-		for _, c := range children {
-			fmt.Fprintf(&sb, "- [%s](%s/)\n", c.name, c.id)
-		}
-		fmt.Fprintf(&sb, "\n")
-	}
-
 	if err := writePage(filepath.Join(g.pageDir(dir), "_index.md"), sb.String()); err != nil {
 		return fmt.Errorf("write workspace page: %w", err)
 	}
-
 	for _, c := range children {
 		if err := g.processSpace(filepath.Join(dir, c.id)); err != nil {
 			return err
@@ -169,14 +157,6 @@ func (g *GenerateContent) processSpace(dir string) error {
 	}
 	fmt.Fprintf(&sb, "---\n\n")
 
-	if len(children) > 0 {
-		fmt.Fprintf(&sb, "## Folders\n\n")
-		for _, c := range children {
-			fmt.Fprintf(&sb, "- [%s](%s/)\n", c.name, c.id)
-		}
-		fmt.Fprintf(&sb, "\n")
-	}
-
 	if err := writePage(filepath.Join(g.pageDir(dir), "_index.md"), sb.String()); err != nil {
 		return fmt.Errorf("write space page: %w", err)
 	}
@@ -212,14 +192,6 @@ func (g *GenerateContent) processFolder(dir string) error {
 	fmt.Fprintf(&sb, "space_id: %s\n", yamlStr(f.Space.ID))
 	fmt.Fprintf(&sb, "space_name: %s\n", yamlStr(f.Space.Name))
 	fmt.Fprintf(&sb, "---\n\n")
-
-	if len(children) > 0 {
-		fmt.Fprintf(&sb, "## Lists\n\n")
-		for _, c := range children {
-			fmt.Fprintf(&sb, "- [%s](%s/)\n", c.name, c.id)
-		}
-		fmt.Fprintf(&sb, "\n")
-	}
 
 	if err := writePage(filepath.Join(g.pageDir(dir), "_index.md"), sb.String()); err != nil {
 		return fmt.Errorf("write folder page: %w", err)
@@ -258,14 +230,6 @@ func (g *GenerateContent) processList(dir string) error {
 	fmt.Fprintf(&sb, "space_id: %s\n", yamlStr(l.Space.ID))
 	fmt.Fprintf(&sb, "space_name: %s\n", yamlStr(l.Space.Name))
 	fmt.Fprintf(&sb, "---\n\n")
-
-	if len(children) > 0 {
-		fmt.Fprintf(&sb, "## Tasks\n\n")
-		for _, c := range children {
-			fmt.Fprintf(&sb, "- [%s](%s/)\n", c.name, c.id)
-		}
-		fmt.Fprintf(&sb, "\n")
-	}
 
 	if err := writePage(filepath.Join(g.pageDir(dir), "_index.md"), sb.String()); err != nil {
 		return fmt.Errorf("write list page: %w", err)
