@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("CLICKUP_TOKEN env var is required")
 	}
 	f := fetch.NewFetchTree(token)
-	if err := f.GetWorkspaces(outputDir); err != nil {
+	if err := f.Run(outputDir); err != nil {
 		log.Fatal("Failed", "err", err)
 	}
 }

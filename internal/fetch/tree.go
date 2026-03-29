@@ -168,7 +168,7 @@ func (f *FetchTree) getSpaces(workspaceID, baseDir string) error {
 	return nil
 }
 
-func (f *FetchTree) GetWorkspaces(baseDir string) error {
+func (f *FetchTree) Run(baseDir string) error {
 	var resp api.WorkspacesResponse
 	if err := f.httpGet("/team", &resp); err != nil {
 		return fmt.Errorf("fetch workspaces: %w", err)
