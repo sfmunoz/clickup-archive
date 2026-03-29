@@ -1,24 +1,11 @@
+/*
+Copyright © 2026 NAME HERE <EMAIL ADDRESS>
+
+*/
 package main
 
-import (
-	"os"
-	"path/filepath"
-
-	"github.com/sfmunoz/clickup-archive/internal/fetch"
-	"github.com/sfmunoz/logit"
-)
-
-var (
-	log       = logit.Logit().WithLevel(logit.LevelInfo)
-	outputDir = filepath.Join(os.Getenv("HOME"), "src", "clickup")
-)
+import "github.com/sfmunoz/clickup-archive/cmd"
 
 func main() {
-	f, err := fetch.NewFetchTree()
-	if err != nil {
-		log.Fatal("Failed", "err", err)
-	}
-	if err := f.Run(outputDir); err != nil {
-		log.Fatal("Failed", "err", err)
-	}
+	cmd.Execute()
 }
