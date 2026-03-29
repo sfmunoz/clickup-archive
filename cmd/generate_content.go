@@ -10,7 +10,7 @@ var generateContentCmd = &cobra.Command{
 	Short: "Generate content from fetched ClickUp data",
 	Long:  `Processes previously fetched ClickUp data and generates derived content.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		g, err := generate.NewGenerateContent(clickupDir())
+		g, err := generate.NewGenerateContent(clickupDir(), "content")
 		if err != nil {
 			return err
 		}
