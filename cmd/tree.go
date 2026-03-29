@@ -1,12 +1,13 @@
 /*
 Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/sfmunoz/clickup-archive/internal/fetch"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +21,13 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tree called")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		outputDir := filepath.Join(os.Getenv("HOME"), "src", "clickup")
+		f, err := fetch.NewFetchTree()
+		if err != nil {
+			return err
+		}
+		return f.Run(outputDir)
 	},
 }
 
