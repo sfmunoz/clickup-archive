@@ -1,36 +1,22 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-// hugoCmd represents the hugo command
 var hugoCmd = &cobra.Command{
 	Use:   "hugo",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Manage the Hugo documentation site",
+	Long: `hugo provides subcommands for building and serving the Hugo
+documentation site bundled with this project.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Use 'hugo build' to produce a static site or 'hugo run' to start a
+local development server with live reload.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("hugo called")
+		cmd.Help()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(hugoCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// hugoCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// hugoCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

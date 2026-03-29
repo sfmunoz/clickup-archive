@@ -5,16 +5,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Build the Hugo documentation site",
+	Long: `Removes the public/ output directory, then runs:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+  hugo build --gc --panicOnWarning [--minify]
+
+Minification is enabled by default; set MINIFY=0 to disable it.
+The theme is read from HUGO_THEME (default: picocss).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		h, err := hugo.NewHugoBuild(".")
 		if err != nil {
@@ -26,14 +25,4 @@ to quickly create a Cobra application.`,
 
 func init() {
 	hugoCmd.AddCommand(buildCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
