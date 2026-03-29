@@ -14,12 +14,16 @@ import (
 	"github.com/sfmunoz/logit"
 )
 
-var log = logit.Logit().WithLevel(logit.LevelInfo)
+var (
+	log       = logit.Logit().WithLevel(logit.LevelInfo)
+	outputDir = filepath.Join(os.Getenv("HOME"), "src", "clickup")
+)
 
-const outputDir = "output"
-const baseURL = "https://api.clickup.com/api/v2"
-const httpGetRetries = 5
-const httpGetRetryDelay = time.Second
+const (
+	baseURL           = "https://api.clickup.com/api/v2"
+	httpGetRetries    = 5
+	httpGetRetryDelay = time.Second
+)
 
 type Client struct {
 	token string
