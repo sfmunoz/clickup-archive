@@ -20,6 +20,7 @@ type Counts struct {
 	Folders    int
 	Lists      int
 	Tasks      int
+	Comments   int
 }
 
 func NewStats(clickupDir string) (*Stats, error) {
@@ -73,8 +74,22 @@ func (s *Stats) Run() error {
 						return fmt.Errorf("read list dir: %w", err)
 					}
 					for _, te := range taskEntries {
-						if te.IsDir() {
-							counts.Tasks++
+						if !te.IsDir() {
+							continue
+						}
+						counts.Tasks++
+						commentsDir := filepath.Join(liDir, te.Name(), "comments")
+						commentEntries, err := os.ReadDir(commentsDir)
+						if err != nil {
+							if !os.IsNotExist(err) {
+								return fmt.Errorf("read comments dir: %w", err)
+							}
+						} else {
+							for _, ce := range commentEntries {
+								if ce.IsDir() {
+									counts.Comments++
+								}
+							}
 						}
 					}
 				}
@@ -86,5 +101,6 @@ func (s *Stats) Run() error {
 	log.Info("folders", "tot", counts.Folders)
 	log.Info("lists", "tot", counts.Lists)
 	log.Info("tasks", "tot", counts.Tasks)
+	log.Info("comments", "tot", counts.Comments)
 	return nil
 }
