@@ -29,71 +29,16 @@ func NewStats(clickupDir string) (*Stats, error) {
 
 func (s *Stats) Run() error {
 	var counts Counts
-	workspaceEntries, err := os.ReadDir(s.clickupDir)
+	entries, err := os.ReadDir(s.clickupDir)
 	if err != nil {
 		return fmt.Errorf("read clickup dir: %w", err)
 	}
-	for _, we := range workspaceEntries {
-		if !we.IsDir() {
+	for _, e := range entries {
+		if !e.IsDir() {
 			continue
 		}
-		counts.Workspaces++
-		wsDir := filepath.Join(s.clickupDir, we.Name())
-		spaceEntries, err := os.ReadDir(wsDir)
-		if err != nil {
-			return fmt.Errorf("read workspace dir: %w", err)
-		}
-		for _, se := range spaceEntries {
-			if !se.IsDir() {
-				continue
-			}
-			counts.Spaces++
-			spDir := filepath.Join(wsDir, se.Name())
-			folderEntries, err := os.ReadDir(spDir)
-			if err != nil {
-				return fmt.Errorf("read space dir: %w", err)
-			}
-			for _, fe := range folderEntries {
-				if !fe.IsDir() {
-					continue
-				}
-				counts.Folders++
-				foDir := filepath.Join(spDir, fe.Name())
-				listEntries, err := os.ReadDir(foDir)
-				if err != nil {
-					return fmt.Errorf("read folder dir: %w", err)
-				}
-				for _, le := range listEntries {
-					if !le.IsDir() {
-						continue
-					}
-					counts.Lists++
-					liDir := filepath.Join(foDir, le.Name())
-					taskEntries, err := os.ReadDir(liDir)
-					if err != nil {
-						return fmt.Errorf("read list dir: %w", err)
-					}
-					for _, te := range taskEntries {
-						if !te.IsDir() {
-							continue
-						}
-						counts.Tasks++
-						commentsDir := filepath.Join(liDir, te.Name(), "comments")
-						commentEntries, err := os.ReadDir(commentsDir)
-						if err != nil {
-							if !os.IsNotExist(err) {
-								return fmt.Errorf("read comments dir: %w", err)
-							}
-						} else {
-							for _, ce := range commentEntries {
-								if ce.IsDir() {
-									counts.Comments++
-								}
-							}
-						}
-					}
-				}
-			}
+		if err := s.processWorkspace(filepath.Join(s.clickupDir, e.Name()), &counts); err != nil {
+			return err
 		}
 	}
 	log.Info("workspaces", "tot", counts.Workspaces)
@@ -102,5 +47,91 @@ func (s *Stats) Run() error {
 	log.Info("lists", "tot", counts.Lists)
 	log.Info("tasks", "tot", counts.Tasks)
 	log.Info("comments", "tot", counts.Comments)
+	return nil
+}
+
+func (s *Stats) processWorkspace(dir string, counts *Counts) error {
+	counts.Workspaces++
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read workspace dir: %w", err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if err := s.processSpace(filepath.Join(dir, e.Name()), counts); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Stats) processSpace(dir string, counts *Counts) error {
+	counts.Spaces++
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read space dir: %w", err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if err := s.processFolder(filepath.Join(dir, e.Name()), counts); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Stats) processFolder(dir string, counts *Counts) error {
+	counts.Folders++
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read folder dir: %w", err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if err := s.processList(filepath.Join(dir, e.Name()), counts); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Stats) processList(dir string, counts *Counts) error {
+	counts.Lists++
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read list dir: %w", err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		if err := s.processTask(filepath.Join(dir, e.Name()), counts); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Stats) processTask(dir string, counts *Counts) error {
+	counts.Tasks++
+	commentsDir := filepath.Join(dir, "comments")
+	entries, err := os.ReadDir(commentsDir)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("read comments dir: %w", err)
+		}
+		return nil
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			counts.Comments++
+		}
+	}
 	return nil
 }
