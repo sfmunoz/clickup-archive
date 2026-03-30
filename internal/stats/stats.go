@@ -51,6 +51,9 @@ func (s *Stats) Run() error {
 }
 
 func (s *Stats) processWorkspace(dir string, counts *Counts) error {
+	if _, err := os.Stat(filepath.Join(dir, "index.json")); os.IsNotExist(err) {
+		return nil
+	}
 	counts.Workspaces++
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -68,6 +71,9 @@ func (s *Stats) processWorkspace(dir string, counts *Counts) error {
 }
 
 func (s *Stats) processSpace(dir string, counts *Counts) error {
+	if _, err := os.Stat(filepath.Join(dir, "index.json")); os.IsNotExist(err) {
+		return nil
+	}
 	counts.Spaces++
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -85,6 +91,9 @@ func (s *Stats) processSpace(dir string, counts *Counts) error {
 }
 
 func (s *Stats) processFolder(dir string, counts *Counts) error {
+	if _, err := os.Stat(filepath.Join(dir, "index.json")); os.IsNotExist(err) {
+		return nil
+	}
 	counts.Folders++
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -102,6 +111,9 @@ func (s *Stats) processFolder(dir string, counts *Counts) error {
 }
 
 func (s *Stats) processList(dir string, counts *Counts) error {
+	if _, err := os.Stat(filepath.Join(dir, "index.json")); os.IsNotExist(err) {
+		return nil
+	}
 	counts.Lists++
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -119,6 +131,9 @@ func (s *Stats) processList(dir string, counts *Counts) error {
 }
 
 func (s *Stats) processTask(dir string, counts *Counts) error {
+	if _, err := os.Stat(filepath.Join(dir, "index.json")); os.IsNotExist(err) {
+		return nil
+	}
 	counts.Tasks++
 	commentsDir := filepath.Join(dir, "comments")
 	entries, err := os.ReadDir(commentsDir)
@@ -129,9 +144,13 @@ func (s *Stats) processTask(dir string, counts *Counts) error {
 		return nil
 	}
 	for _, e := range entries {
-		if e.IsDir() {
-			counts.Comments++
+		if !e.IsDir() {
+			continue
 		}
+		if _, err := os.Stat(filepath.Join(commentsDir, e.Name(), "index.json")); os.IsNotExist(err) {
+			continue
+		}
+		counts.Comments++
 	}
 	return nil
 }
