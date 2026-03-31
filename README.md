@@ -14,6 +14,7 @@ ClickUp holds a lot of valuable information — tasks, comments, docs, attachmen
 - Exports spaces, folders, lists, tasks, comments, and attachments
 - Saves everything to a structured local directory
 - Designed to be re-run to refresh the archive incrementally
+- Local archive can be navigated using the embedded TUI browser
 
 ## What it does NOT do
 
