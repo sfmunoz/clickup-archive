@@ -1,29 +1,57 @@
 package tui
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/sfmunoz/logit"
-
+	"charm.land/bubbles/v2/table"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
-var log = logit.Logit().WithLevel(logit.LevelInfo)
+var baseStyle = lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("240"))
+
+func tableBuild() table.Model {
+	columns := []table.Column{
+		{Title: "Id", Width: 4},
+		{Title: "Name", Width: 30},
+	}
+	rows := []table.Row{
+		{"1", "Workspace"},
+		{"2", "Space"},
+		{"3", "Folder"},
+		{"4", "List"},
+		{"5", "Task"},
+	}
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(len(rows)+1),
+		table.WithWidth(42),
+	)
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("240")).
+		Bold(false)
+	t.SetStyles(s)
+	return t
+}
 
 type Tui struct {
 	clickupDir string
-	choices    []string
-	selected   map[int]struct{}
-	cursor     int
+	table      table.Model
 }
 
 func NewTui(clickupDir string) (*Tui, error) {
 	return &Tui{
 		clickupDir: clickupDir,
-		choices:    []string{"Workspace", "Space", "Folder", "List", "Task"},
-		selected:   make(map[int]struct{}),
-		cursor:     0,
+		table:      tableBuild(),
 	}, nil
 }
 
@@ -37,44 +65,19 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return t, tea.Quit
-		case "up", "k":
-			if t.cursor > 0 {
-				t.cursor--
-			}
-		case "down", "j":
-			if t.cursor < len(t.choices)-1 {
-				t.cursor++
-			}
 		case "enter", "space":
-			_, ok := t.selected[t.cursor]
-			if ok {
-				delete(t.selected, t.cursor)
-			} else {
-				t.selected[t.cursor] = struct{}{}
-			}
+			return t, tea.Batch(
+				tea.Printf("selection: '%s'", t.table.SelectedRow()[1]),
+			)
 		}
 	}
-	return t, nil
+	var cmd tea.Cmd
+	t.table, cmd = t.table.Update(msg)
+	return t, cmd
 }
 
 func (t *Tui) View() tea.View {
-	var sb strings.Builder
-	fmt.Fprint(&sb, "\nSelect components:\n\n")
-	for i, choice := range t.choices {
-		cursor := " "
-		if t.cursor == i {
-			cursor = ">"
-		}
-		checked := " "
-		if _, ok := t.selected[i]; ok {
-			checked = "x"
-		}
-		fmt.Fprintf(&sb, "%s [%s] %s\n", cursor, checked, choice)
-	}
-	fmt.Fprintf(&sb, "\nPress q to quit.\n")
-	v := tea.NewView(sb.String())
-	v.WindowTitle = "ClickUp Archive"
-	return v
+	return tea.NewView(baseStyle.Render(t.table.View()) + "\n  " + t.table.HelpView() + "\n")
 }
 
 func (t *Tui) Run() error {
