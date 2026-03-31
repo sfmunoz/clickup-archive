@@ -95,6 +95,92 @@ func (n *Node) BuildTree() *tree.Tree {
 	return t
 }
 
+func (n *Node) root() *Node {
+	cur := n
+	for cur.Parent != nil {
+		cur = cur.Parent
+	}
+	return cur
+}
+
+func (n *Node) visibleNodes() []*Node {
+	result := []*Node{n}
+	if n.Open {
+		for _, c := range n.Children {
+			result = append(result, c.visibleNodes()...)
+		}
+	}
+	return result
+}
+
+func (n *Node) findCursor() *Node {
+	if n.Cursor {
+		return n
+	}
+	for _, c := range n.Children {
+		if found := c.findCursor(); found != nil {
+			return found
+		}
+	}
+	return nil
+}
+
+func (n *Node) moveCursorUp() {
+	visible := n.root().visibleNodes()
+	for i, node := range visible {
+		if node.Cursor && i > 0 {
+			node.Cursor = false
+			visible[i-1].Cursor = true
+			return
+		}
+	}
+}
+
+func (n *Node) moveCursorDown() {
+	visible := n.root().visibleNodes()
+	for i, node := range visible {
+		if node.Cursor && i < len(visible)-1 {
+			node.Cursor = false
+			visible[i+1].Cursor = true
+			return
+		}
+	}
+}
+
+func (n *Node) moveLeft() {
+	cursor := n.root().findCursor()
+	if cursor == nil {
+		return
+	}
+	if cursor.Open {
+		cursor.Open = false
+	} else if cursor.Parent != nil {
+		cursor.Cursor = false
+		cursor.Parent.Cursor = true
+	}
+}
+
+func (n *Node) moveRight() {
+	cursor := n.root().findCursor()
+	if cursor == nil || len(cursor.Children) == 0 {
+		return
+	}
+	if !cursor.Open {
+		cursor.Open = true
+	} else {
+		cursor.Cursor = false
+		cursor.Children[0].Cursor = true
+	}
+}
+
+func (n *Node) toggleOpen() {
+	cursor := n.root().findCursor()
+	if cursor == nil || len(cursor.Children) == 0 {
+		return
+	}
+	cursor.Open = !cursor.Open
+}
+
 func (n *Node) Init() tea.Cmd {
 	return nil
 }
@@ -103,9 +189,16 @@ func (n *Node) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "s":
-			n.SetCursor(!n.Cursor)
-			return n, nil
+		case "up":
+			n.moveCursorUp()
+		case "down":
+			n.moveCursorDown()
+		case "left":
+			n.moveLeft()
+		case "right":
+			n.moveRight()
+		case "enter", " ":
+			n.toggleOpen()
 		}
 	}
 	return n, nil
