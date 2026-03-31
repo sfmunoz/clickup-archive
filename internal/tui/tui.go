@@ -51,6 +51,7 @@ type Tui struct {
 	level      int
 	breadcrumb []string
 	err        error
+	tree       *Node
 }
 
 func loadEntries(dir string) ([]entry, error) {
@@ -130,6 +131,7 @@ func NewTui(clickupDir string) (*Tui, error) {
 		currentDir: clickupDir,
 		level:      0,
 		table:      buildTable(entries),
+		tree:       TreeDemo(),
 	}, nil
 }
 
@@ -186,6 +188,7 @@ func (t *Tui) navigateOut() (tea.Model, tea.Cmd) {
 }
 
 func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	_, _ = t.tree.Update(msg)
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
@@ -204,7 +207,7 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) View() tea.View {
 	var b strings.Builder
-	b.WriteString(TreeDemo().String() + "\n")
+	b.WriteString(t.tree.View().Content)
 	if len(t.breadcrumb) > 0 {
 		b.WriteString(breadcrumbStyle.Render("  "+strings.Join(t.breadcrumb, " › ")) + "\n")
 	}

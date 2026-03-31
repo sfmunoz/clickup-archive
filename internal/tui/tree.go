@@ -2,7 +2,9 @@ package tui
 
 import (
 	"slices"
+	"strings"
 
+	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2/tree"
 )
 
@@ -93,8 +95,30 @@ func (n *Node) BuildTree() *tree.Tree {
 	return t
 }
 
-func TreeDemo() *tree.Tree {
-	n := NewNode("ClickUp Archive").SetOpen(true).SetCursor(true).SetChildren(
+func (n *Node) Init() tea.Cmd {
+	return nil
+}
+
+func (n *Node) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "s":
+			n.SetCursor(!n.Cursor)
+			return n, nil
+		}
+	}
+	return n, nil
+}
+
+func (n *Node) View() tea.View {
+	var b strings.Builder
+	b.WriteString(n.BuildTree().String() + "\n")
+	return tea.NewView(b.String())
+}
+
+func TreeDemo() *Node {
+	return NewNode("ClickUp Archive").SetOpen(true).SetCursor(true).SetChildren(
 		NewNode("workspace-1").SetOpen(true).SetChildren(
 			NewNode("space-1"),
 			NewNode("space-2").SetOpen(true).SetChildren(
@@ -115,5 +139,4 @@ func TreeDemo() *tree.Tree {
 			),
 		),
 	)
-	return n.BuildTree()
 }
