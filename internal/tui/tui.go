@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/sfmunoz/logit"
 
@@ -57,7 +58,8 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (t *Tui) View() tea.View {
-	s := "\nSelect components:\n\n"
+	var sb strings.Builder
+	fmt.Fprint(&sb, "\nSelect components:\n\n")
 	for i, choice := range t.choices {
 		cursor := " "
 		if t.cursor == i {
@@ -67,10 +69,10 @@ func (t *Tui) View() tea.View {
 		if _, ok := t.selected[i]; ok {
 			checked = "x"
 		}
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		fmt.Fprintf(&sb, "%s [%s] %s\n", cursor, checked, choice)
 	}
-	s += "\nPress q to quit.\n"
-	v := tea.NewView(s)
+	fmt.Fprintf(&sb, "\nPress q to quit.\n")
+	v := tea.NewView(sb.String())
 	v.WindowTitle = "ClickUp Archive"
 	return v
 }
