@@ -14,6 +14,11 @@ type Node struct {
 	Children []*Node
 	Open     bool
 	Cursor   bool
+
+	dir            string // path to this node's own directory (index.json lives here)
+	childrenDir    string // directory to scan for children
+	childrenLoaded bool
+	level          int // 0=workspace … 5=comment
 }
 
 func NewNode(name string) *Node {
@@ -73,7 +78,8 @@ func (n *Node) String() string {
 		}
 		return n.Name
 	}
-	if len(n.Children) < 1 {
+	hasOrMayHaveChildren := len(n.Children) > 0 || (n.childrenDir != "" && !n.childrenLoaded)
+	if !hasOrMayHaveChildren {
 		return name()
 	}
 	if n.Open {
@@ -208,28 +214,4 @@ func (n *Node) View() tea.View {
 	var b strings.Builder
 	b.WriteString(n.BuildTree().String() + "\n")
 	return tea.NewView(b.String())
-}
-
-func TreeDemo() *Node {
-	return NewNode("ClickUp Archive").SetOpen(true).SetCursor(true).SetChildren(
-		NewNode("workspace-1").SetOpen(true).SetChildren(
-			NewNode("space-1"),
-			NewNode("space-2").SetOpen(true).SetChildren(
-				NewNode("folder-21").SetOpen(true).SetChildren(
-					NewNode("list-211"),
-					NewNode("list-212"),
-				),
-				NewNode("folder-22").SetOpen(false).SetChildren(
-					NewNode("list-221"),
-					NewNode("list-222"),
-				),
-			),
-			NewNode("space-3").SetOpen(true).SetChildren(
-				NewNode("folder-31").SetOpen(true).SetChildren(
-					NewNode("list-311"),
-					NewNode("list-312"),
-				),
-			),
-		),
-	)
 }

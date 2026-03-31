@@ -2,33 +2,12 @@ package tui
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"charm.land/bubbles/v2/table"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 )
-
-var (
-	baseStyle = lipgloss.NewStyle().
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("240"))
-
-	breadcrumbStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("33"))
-
-	levelStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240")).
-			Bold(true)
-
-	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("196"))
-)
-
-var levelNames = []string{"Workspace", "Space", "Folder", "List", "Task", "Comment"}
 
 type entry struct {
 	id   string
@@ -36,21 +15,8 @@ type entry struct {
 	dir  string
 }
 
-type levelState struct {
-	dir     string
-	entries []entry
-	cursor  int
-}
-
 type Tui struct {
 	clickupDir string
-	table      table.Model
-	stack      []levelState
-	current    []entry
-	currentDir string
-	level      int
-	breadcrumb []string
-	err        error
 	tree       *Node
 }
 
@@ -89,134 +55,77 @@ func loadEntries(dir string) ([]entry, error) {
 	return entries, nil
 }
 
-func buildTable(entries []entry) table.Model {
-	columns := []table.Column{
-		{Title: "ID", Width: 20},
-		{Title: "Name", Width: 40},
+func (t *Tui) loadNodeChildren(n *Node) {
+	if n.childrenLoaded || n.childrenDir == "" {
+		return
 	}
-	rows := make([]table.Row, len(entries))
-	for i, e := range entries {
-		rows[i] = table.Row{e.id, e.name}
+	n.childrenLoaded = true
+	entries, err := loadEntries(n.childrenDir)
+	if err != nil {
+		return
 	}
-	height := min(len(rows)+1, 20)
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(height),
-		table.WithWidth(64),
-	)
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(false)
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
-		Bold(false)
-	t.SetStyles(s)
-	return t
+	for _, e := range entries {
+		child := &Node{
+			Name:  e.name,
+			dir:   e.dir,
+			level: n.level + 1,
+		}
+		if child.level == 4 { // task → children live in comments/
+			child.childrenDir = filepath.Join(e.dir, "comments")
+		} else if child.level < 5 { // comment nodes have no children
+			child.childrenDir = e.dir
+		}
+		n.AppendChild(child)
+	}
+}
+
+func buildRootNode(clickupDir string) (*Node, error) {
+	root := &Node{
+		Name:        "ClickUp Archive",
+		dir:         clickupDir,
+		childrenDir: clickupDir,
+		level:       -1,
+		Open:        true,
+		Cursor:      true,
+	}
+	t := &Tui{clickupDir: clickupDir, tree: root}
+	t.loadNodeChildren(root)
+	return root, nil
 }
 
 func NewTui(clickupDir string) (*Tui, error) {
-	entries, err := loadEntries(clickupDir)
+	root, err := buildRootNode(clickupDir)
 	if err != nil {
-		return nil, fmt.Errorf("load workspaces: %w", err)
+		return nil, err
 	}
-	return &Tui{
-		clickupDir: clickupDir,
-		current:    entries,
-		currentDir: clickupDir,
-		level:      0,
-		table:      buildTable(entries),
-		tree:       TreeDemo(),
-	}, nil
+	return &Tui{clickupDir: clickupDir, tree: root}, nil
 }
 
 func (t *Tui) Init() tea.Cmd {
 	return nil
 }
 
-func (t *Tui) navigateIn() (tea.Model, tea.Cmd) {
-	if len(t.current) == 0 || t.level >= len(levelNames)-1 {
-		return t, nil
-	}
-	sel := t.table.Cursor()
-	if sel < 0 || sel >= len(t.current) {
-		return t, nil
-	}
-	selectedEntry := t.current[sel]
-	nextDir := selectedEntry.dir
-	if t.level == 4 { // task → comments
-		nextDir = filepath.Join(selectedEntry.dir, "comments")
-	}
-	entries, err := loadEntries(nextDir)
-	if err != nil {
-		t.err = fmt.Errorf("cannot open %s: %w", nextDir, err)
-		return t, nil
-	}
-	t.stack = append(t.stack, levelState{
-		dir:     t.currentDir,
-		entries: t.current,
-		cursor:  sel,
-	})
-	t.breadcrumb = append(t.breadcrumb, selectedEntry.name)
-	t.current = entries
-	t.currentDir = nextDir
-	t.level++
-	t.table = buildTable(entries)
-	t.err = nil
-	return t, nil
-}
-
-func (t *Tui) navigateOut() (tea.Model, tea.Cmd) {
-	if len(t.stack) == 0 {
-		return t, nil
-	}
-	prev := t.stack[len(t.stack)-1]
-	t.stack = t.stack[:len(t.stack)-1]
-	t.breadcrumb = t.breadcrumb[:len(t.breadcrumb)-1]
-	t.current = prev.entries
-	t.currentDir = prev.dir
-	t.level--
-	t.table = buildTable(prev.entries)
-	t.table.SetCursor(prev.cursor)
-	t.err = nil
-	return t, nil
-}
-
 func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	_, _ = t.tree.Update(msg)
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		switch msg.String() {
+	if kp, ok := msg.(tea.KeyPressMsg); ok {
+		switch kp.String() {
 		case "ctrl+c", "q":
 			return t, tea.Quit
-		case "right", "enter":
-			return t.navigateIn()
-		case "left", "esc":
-			return t.navigateOut()
+		case "right", "enter", " ":
+			cursor := t.tree.root().findCursor()
+			if cursor != nil {
+				t.loadNodeChildren(cursor)
+			}
 		}
 	}
-	var cmd tea.Cmd
-	t.table, cmd = t.table.Update(msg)
+	model, cmd := t.tree.Update(msg)
+	t.tree = model.(*Node)
 	return t, cmd
 }
 
 func (t *Tui) View() tea.View {
 	var b strings.Builder
 	b.WriteString(t.tree.View().Content)
-	if len(t.breadcrumb) > 0 {
-		b.WriteString(breadcrumbStyle.Render("  "+strings.Join(t.breadcrumb, " › ")) + "\n")
-	}
-	b.WriteString(levelStyle.Render("  "+levelNames[t.level]) + "\n")
-	b.WriteString(baseStyle.Render(t.table.View()) + "\n")
-	if t.err != nil {
-		b.WriteString(errorStyle.Render("  "+t.err.Error()) + "\n")
-	}
-	b.WriteString("  " + t.table.HelpView() + "   ←/esc back   →/enter in\n")
+	b.WriteString("  ↑↓ move   ←/→ collapse/expand   q quit\n")
 	return tea.NewView(b.String())
 }
 
