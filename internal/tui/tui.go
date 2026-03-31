@@ -63,7 +63,7 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c", "q", "esc":
 			return t, tea.Quit
 		case "enter", "space":
 			return t, tea.Batch(
