@@ -97,10 +97,7 @@ func buildTable(entries []entry) table.Model {
 	for i, e := range entries {
 		rows[i] = table.Row{e.id, e.name}
 	}
-	height := len(rows) + 1
-	if height > 20 {
-		height = 20
-	}
+	height := min(len(rows)+1, 20)
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
@@ -149,18 +146,15 @@ func (t *Tui) navigateIn() (tea.Model, tea.Cmd) {
 		return t, nil
 	}
 	selectedEntry := t.current[sel]
-
 	nextDir := selectedEntry.dir
 	if t.level == 4 { // task → comments
 		nextDir = filepath.Join(selectedEntry.dir, "comments")
 	}
-
 	entries, err := loadEntries(nextDir)
 	if err != nil {
 		t.err = fmt.Errorf("cannot open %s: %w", nextDir, err)
 		return t, nil
 	}
-
 	t.stack = append(t.stack, levelState{
 		dir:     t.currentDir,
 		entries: t.current,
@@ -195,11 +189,11 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "ctrl+c", "q", "esc":
+		case "ctrl+c", "q":
 			return t, tea.Quit
 		case "right", "enter":
 			return t.navigateIn()
-		case "left":
+		case "left", "esc":
 			return t.navigateOut()
 		}
 	}
@@ -210,26 +204,15 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) View() tea.View {
 	var b strings.Builder
-
-	// Breadcrumb
 	if len(t.breadcrumb) > 0 {
 		b.WriteString(breadcrumbStyle.Render("  "+strings.Join(t.breadcrumb, " › ")) + "\n")
 	}
-
-	// Current level label
 	b.WriteString(levelStyle.Render("  "+levelNames[t.level]) + "\n")
-
-	// Table
 	b.WriteString(baseStyle.Render(t.table.View()) + "\n")
-
-	// Error
 	if t.err != nil {
 		b.WriteString(errorStyle.Render("  "+t.err.Error()) + "\n")
 	}
-
-	// Help
-	b.WriteString("  " + t.table.HelpView() + "   ← back   → in\n")
-
+	b.WriteString("  " + t.table.HelpView() + "   ←/esc back   →/enter in\n")
 	return tea.NewView(b.String())
 }
 
