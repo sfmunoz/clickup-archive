@@ -11,6 +11,7 @@ type Node struct {
 	Parent   *Node
 	Children []*Node
 	Open     bool
+	Cursor   bool
 }
 
 func NewNode(name string) *Node {
@@ -19,6 +20,7 @@ func NewNode(name string) *Node {
 		Parent:   nil,
 		Children: make([]*Node, 0),
 		Open:     false,
+		Cursor:   false,
 	}
 }
 
@@ -57,14 +59,25 @@ func (n *Node) SetOpen(open bool) *Node {
 	return n
 }
 
+func (n *Node) SetCursor(cursor bool) *Node {
+	n.Cursor = cursor
+	return n
+}
+
 func (n *Node) String() string {
-	if len(n.Children) < 1 {
+	name := func() string {
+		if n.Cursor {
+			return "[" + n.Name + "]"
+		}
 		return n.Name
 	}
-	if n.Open {
-		return "▼ " + n.Name
+	if len(n.Children) < 1 {
+		return name()
 	}
-	return "▶ " + n.Name
+	if n.Open {
+		return "▼ " + name()
+	}
+	return "▶ " + name()
 }
 
 func (n *Node) BuildTree() *tree.Tree {
@@ -81,7 +94,7 @@ func (n *Node) BuildTree() *tree.Tree {
 }
 
 func TreeDemo() *tree.Tree {
-	n := NewNode("ClickUp Archive").SetOpen(true).SetChildren(
+	n := NewNode("ClickUp Archive").SetOpen(true).SetCursor(true).SetChildren(
 		NewNode("workspace-1").SetOpen(true).SetChildren(
 			NewNode("space-1"),
 			NewNode("space-2").SetOpen(true).SetChildren(
