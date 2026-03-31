@@ -204,6 +204,7 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) View() tea.View {
 	var b strings.Builder
+	b.WriteString(TreeDemo().String() + "\n")
 	if len(t.breadcrumb) > 0 {
 		b.WriteString(breadcrumbStyle.Render("  "+strings.Join(t.breadcrumb, " › ")) + "\n")
 	}
