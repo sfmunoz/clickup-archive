@@ -5,8 +5,13 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/tree"
 )
+
+var selStyle = lipgloss.NewStyle().
+	Background(lipgloss.BrightBlack).
+	Padding(0, 1, 0)
 
 type Node struct {
 	Name     string
@@ -74,7 +79,7 @@ func (n *Node) SetCursor(cursor bool) *Node {
 func (n *Node) String() string {
 	name := func() string {
 		if n.Cursor {
-			return "[" + n.Name + "]"
+			return selStyle.Render(n.Name)
 		}
 		return n.Name
 	}
