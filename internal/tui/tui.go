@@ -115,6 +115,8 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if cursor != nil {
 				t.loadNodeChildren(cursor)
 			}
+		case "s":
+			return screen{}, tea.RequestWindowSize
 		}
 	}
 	model, cmd := t.tree.Update(msg)
