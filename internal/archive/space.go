@@ -14,6 +14,33 @@ type Space struct {
 	Children []*Folder
 }
 
+func SaveSpace(parent *Workspace, s *api.Space, update bool) (*Space, error) {
+	var sOld *Space = nil
+	for _, c := range parent.Children {
+		if c.Data.ID != s.ID {
+			continue
+		}
+		if !update {
+			return nil, fmt.Errorf("space '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		sOld = c
+		break
+	}
+	dir := spaceDir(parent.GetDir(), s.ID)
+	if err := jsonSave(s, dir); err != nil {
+		return nil, err
+	}
+	if sOld == nil {
+		log.Info("space created", "id", s.ID, "name", s.Name)
+		sNew := &Space{Parent: parent, Data: s, Children: make([]*Folder, 0)}
+		parent.Children = append(parent.Children, sNew)
+		return sNew, nil
+	}
+	log.Warn("space updated", "id_old", sOld.Data.ID, "name_old", sOld.Data.Name, "id_new", s.ID, "name_new", s.Name)
+	sOld.Data = s
+	return sOld, nil
+}
+
 func LoadSpace(parent *Workspace, id string) (*Space, error) {
 	dir := spaceDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
@@ -53,9 +80,9 @@ func (s *Space) GetDir() string {
 	return spaceDir(s.Parent.GetDir(), s.Data.ID)
 }
 
-func (s *Space) SaveFolder(f *api.Folder, update bool) (*Folder, error) {
+func SaveFolder(parent *Space, f *api.Folder, update bool) (*Folder, error) {
 	var fOld *Folder = nil
-	for _, c := range s.Children {
+	for _, c := range parent.Children {
 		if c.Data.ID != f.ID {
 			continue
 		}
@@ -65,14 +92,14 @@ func (s *Space) SaveFolder(f *api.Folder, update bool) (*Folder, error) {
 		fOld = c
 		break
 	}
-	dir := folderDir(s.GetDir(), f.ID)
+	dir := folderDir(parent.GetDir(), f.ID)
 	if err := jsonSave(f, dir); err != nil {
 		return nil, err
 	}
 	if fOld == nil {
 		log.Info("folder created", "id", f.ID, "name", f.Name)
-		fNew := &Folder{Parent: s, Data: f, Children: make([]*List, 0)}
-		s.Children = append(s.Children, fNew)
+		fNew := &Folder{Parent: parent, Data: f, Children: make([]*List, 0)}
+		parent.Children = append(parent.Children, fNew)
 		return fNew, nil
 	}
 	log.Warn("folder updated", "id_old", fOld.Data.ID, "name_old", fOld.Data.Name, "id_new", f.ID, "name_new", f.Name)

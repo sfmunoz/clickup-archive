@@ -14,6 +14,33 @@ type Task struct {
 	Children []*Comment
 }
 
+func SaveTask(parent *List, t *api.Task, update bool) (*Task, error) {
+	var tOld *Task = nil
+	for _, c := range parent.Children {
+		if c.Data.ID != t.ID {
+			continue
+		}
+		if !update {
+			return nil, fmt.Errorf("task '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		tOld = c
+		break
+	}
+	dir := taskDir(parent.GetDir(), t.ID)
+	if err := jsonSave(t, dir); err != nil {
+		return nil, err
+	}
+	if tOld == nil {
+		log.Info("task created", "id", t.ID, "name", t.Name)
+		tNew := &Task{Parent: parent, Data: t, Children: make([]*Comment, 0)}
+		parent.Children = append(parent.Children, tNew)
+		return tNew, nil
+	}
+	log.Warn("task updated", "id_old", tOld.Data.ID, "name_old", tOld.Data.Name, "id_new", t.ID, "name_new", t.Name)
+	tOld.Data = t
+	return tOld, nil
+}
+
 func LoadTask(parent *List, id string) (*Task, error) {
 	dir := taskDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
@@ -54,33 +81,6 @@ func LoadTask(parent *List, id string) (*Task, error) {
 
 func (t *Task) GetDir() string {
 	return taskDir(t.Parent.GetDir(), t.Data.ID)
-}
-
-func (t *Task) SaveComment(c *api.Comment, update bool) (*Comment, error) {
-	var cOld *Comment = nil
-	for _, ch := range t.Children {
-		if ch.Data.ID != c.ID {
-			continue
-		}
-		if !update {
-			return nil, fmt.Errorf("comment '%s' already exists and 'update' is false", ch.Data.ID)
-		}
-		cOld = ch
-		break
-	}
-	dir := commentDir(t.GetDir(), c.ID)
-	if err := jsonSave(c, dir); err != nil {
-		return nil, err
-	}
-	if cOld == nil {
-		log.Info("comment created", "id", c.ID)
-		cNew := &Comment{Parent: t, Data: c, Children: make([]*struct{}, 0)}
-		t.Children = append(t.Children, cNew)
-		return cNew, nil
-	}
-	log.Warn("comment updated", "id_old", cOld.Data.ID, "id_new", c.ID)
-	cOld.Data = c
-	return cOld, nil
 }
 
 func (t *Task) IsCommentsDone() bool {

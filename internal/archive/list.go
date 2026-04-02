@@ -14,6 +14,33 @@ type List struct {
 	Children []*Task
 }
 
+func SaveList(parent *Folder, l *api.List, update bool) (*List, error) {
+	var lOld *List = nil
+	for _, c := range parent.Children {
+		if c.Data.ID != l.ID {
+			continue
+		}
+		if !update {
+			return nil, fmt.Errorf("list '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		lOld = c
+		break
+	}
+	dir := listDir(parent.GetDir(), l.ID)
+	if err := jsonSave(l, dir); err != nil {
+		return nil, err
+	}
+	if lOld == nil {
+		log.Info("list created", "id", l.ID, "name", l.Name)
+		lNew := &List{Parent: parent, Data: l, Children: make([]*Task, 0)}
+		parent.Children = append(parent.Children, lNew)
+		return lNew, nil
+	}
+	log.Warn("list updated", "id_old", lOld.Data.ID, "name_old", lOld.Data.Name, "id_new", l.ID, "name_new", l.Name)
+	lOld.Data = l
+	return lOld, nil
+}
+
 func LoadList(parent *Folder, id string) (*List, error) {
 	dir := listDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
@@ -51,31 +78,4 @@ func LoadList(parent *Folder, id string) (*List, error) {
 
 func (l *List) GetDir() string {
 	return listDir(l.Parent.GetDir(), l.Data.ID)
-}
-
-func (l *List) SaveTask(t *api.Task, update bool) (*Task, error) {
-	var tOld *Task = nil
-	for _, c := range l.Children {
-		if c.Data.ID != t.ID {
-			continue
-		}
-		if !update {
-			return nil, fmt.Errorf("task '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
-		}
-		tOld = c
-		break
-	}
-	dir := taskDir(l.GetDir(), t.ID)
-	if err := jsonSave(t, dir); err != nil {
-		return nil, err
-	}
-	if tOld == nil {
-		log.Info("task created", "id", t.ID, "name", t.Name)
-		tNew := &Task{Parent: l, Data: t, Children: make([]*Comment, 0)}
-		l.Children = append(l.Children, tNew)
-		return tNew, nil
-	}
-	log.Warn("task updated", "id_old", tOld.Data.ID, "name_old", tOld.Data.Name, "id_new", t.ID, "name_new", t.Name)
-	tOld.Data = t
-	return tOld, nil
 }
