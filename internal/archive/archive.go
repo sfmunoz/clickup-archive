@@ -9,14 +9,18 @@ import (
 
 var log = logit.Logit().WithLevel(logit.LevelInfo)
 
-type ArchiveData struct {
-	Dir string
-}
-
 type Archive struct {
 	Parent   *struct{}
 	Data     *ArchiveData
 	Children []*Workspace
+}
+
+type ArchiveData struct {
+	Dir string
+}
+
+func (a *Archive) GetDir() string {
+	return a.Data.Dir
 }
 
 func LoadArchive(dir string) (*Archive, error) {
@@ -43,10 +47,6 @@ func LoadArchive(dir string) (*Archive, error) {
 		a.Children = append(a.Children, w)
 	}
 	return a, nil
-}
-
-func (a *Archive) GetDir() string {
-	return a.Data.Dir
 }
 
 func isFolder(dir string) error {

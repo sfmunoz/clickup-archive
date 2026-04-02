@@ -14,6 +14,10 @@ type Workspace struct {
 	Children []*Space
 }
 
+func (w *Workspace) GetDir() string {
+	return workspaceDir(w.Parent.GetDir(), w.Data.ID)
+}
+
 func LoadWorkspace(parent *Archive, id string) (*Workspace, error) {
 	dir := workspaceDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
@@ -74,8 +78,4 @@ func SaveWorkspace(parent *Archive, w *api.Workspace, update bool) (*Workspace, 
 	log.Warn("workspace updated", "id_old", wOld.Data.ID, "name_old", wOld.Data.Name, "id_new", w.ID, "name_new", w.Name)
 	wOld.Data = w
 	return wOld, nil
-}
-
-func (w *Workspace) GetDir() string {
-	return workspaceDir(w.Parent.GetDir(), w.Data.ID)
 }
