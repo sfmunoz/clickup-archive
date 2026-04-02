@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 
 	"github.com/sfmunoz/logit"
 )
@@ -48,6 +51,34 @@ func (s *Stats) Run() error {
 	log.Info("lists", "tot", counts.Lists)
 	log.Info("tasks", "tot", counts.Tasks)
 	log.Info("comments", "tot", counts.Comments)
+	a, err := archive.NewArchive(s.clickupDir)
+	if err != nil {
+		return err
+	}
+	for i1, v1 := range a.Children {
+		log.Info("..", "i", i1, "v", v1.Data.ID, "n", v1.Data.Name)
+		for i2, v2 := range v1.Children {
+			log.Info("....", "i", i2, "v", v2.Data.ID, "n", v2.Data.Name)
+			for i3, v3 := range v2.Children {
+				log.Info("......", "i", i3, "v", v3.Data.ID, "n", v3.Data.Name)
+				for i4, v4 := range v3.Children {
+					log.Info("........", "i", i4, "v", v4.Data.ID, "n", v4.Data.Name)
+					for i5, v5 := range v4.Children {
+						log.Info("..........", "i", i5, "v", v5.Data.ID, "n", v5.Data.Name)
+						for i6, v6 := range v5.Children {
+							log.Info("............", "i", i6, "v", v6.Data.ID, "n", strings.ReplaceAll(
+								strings.TrimSpace(
+									v6.Data.Text[:min(60, len(v6.Data.Text))],
+								),
+								"\n",
+								" | ",
+							))
+						}
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
