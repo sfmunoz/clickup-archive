@@ -2,6 +2,7 @@ package archive
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -50,4 +51,33 @@ func LoadWorkspace(parent *Archive, id string) (*Workspace, error) {
 
 func (w *Workspace) GetDir() string {
 	return workspaceDir(w.Parent.GetDir(), w.Data.ID)
+}
+
+func (w *Workspace) SaveSpace(s *api.Space, update bool) error {
+	var sOld *Space = nil
+	for _, c := range w.Children {
+		if c.Data.ID != s.ID {
+			continue
+		}
+		if !update {
+			return fmt.Errorf("space '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		sOld = c
+		break
+	}
+	if sOld == nil {
+		log.Info("creating space '%s=%s'", s.ID, s.Name)
+	} else {
+		log.Warn("updating space '%s=%s' -> '%s=%s'", sOld.Data.ID, sOld.Data.Name, s.ID, s.Name)
+	}
+	dir := spaceDir(w.GetDir(), s.ID)
+	if err := jsonSave(s, dir); err != nil {
+		return err
+	}
+	if sOld == nil {
+		w.Children = append(w.Children, &Space{Parent: w, Data: s, Children: make([]*Folder, 0)})
+	} else {
+		sOld.Data = s
+	}
+	return nil
 }

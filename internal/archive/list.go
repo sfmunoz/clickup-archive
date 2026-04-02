@@ -2,6 +2,7 @@ package archive
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -50,4 +51,33 @@ func LoadList(parent *Folder, id string) (*List, error) {
 
 func (l *List) GetDir() string {
 	return listDir(l.Parent.GetDir(), l.Data.ID)
+}
+
+func (l *List) SaveTask(t *api.Task, update bool) error {
+	var tOld *Task = nil
+	for _, c := range l.Children {
+		if c.Data.ID != t.ID {
+			continue
+		}
+		if !update {
+			return fmt.Errorf("task '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		tOld = c
+		break
+	}
+	if tOld == nil {
+		log.Info("creating task '%s=%s'", t.ID, t.Name)
+	} else {
+		log.Warn("updating task '%s=%s' -> '%s=%s'", tOld.Data.ID, tOld.Data.Name, t.ID, t.Name)
+	}
+	dir := taskDir(l.GetDir(), t.ID)
+	if err := jsonSave(t, dir); err != nil {
+		return err
+	}
+	if tOld == nil {
+		l.Children = append(l.Children, &Task{Parent: l, Data: t, Children: make([]*Comment, 0)})
+	} else {
+		tOld.Data = t
+	}
+	return nil
 }

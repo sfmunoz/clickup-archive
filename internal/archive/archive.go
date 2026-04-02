@@ -3,7 +3,12 @@ package archive
 import (
 	"fmt"
 	"os"
+
+	"github.com/sfmunoz/clickup-archive/internal/api"
+	"github.com/sfmunoz/logit"
 )
+
+var log = logit.Logit().WithLevel(logit.LevelInfo)
 
 type ArchiveData struct {
 	Dir string
@@ -39,6 +44,35 @@ func LoadArchive(dir string) (*Archive, error) {
 		a.Children = append(a.Children, w)
 	}
 	return a, nil
+}
+
+func (a *Archive) SaveWorkspace(w *api.Workspace, update bool) error {
+	var wOld *Workspace = nil
+	for _, c := range a.Children {
+		if c.Data.ID != w.ID {
+			continue
+		}
+		if !update {
+			return fmt.Errorf("workspace '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+		}
+		wOld = c
+		break
+	}
+	if wOld == nil {
+		log.Info("creating workspace '%s=%s'", w.ID, w.Name)
+	} else {
+		log.Warn("updating workspace '%s=%s' -> '%s=%s'", wOld.Data.ID, wOld.Data.Name, w.ID, w.Name)
+	}
+	dir := workspaceDir(a.GetDir(), w.ID)
+	if err := jsonSave(w, dir); err != nil {
+		return err
+	}
+	if wOld == nil {
+		a.Children = append(a.Children, &Workspace{Parent: a, Data: w, Children: make([]*Space, 0)})
+	} else {
+		wOld.Data = w
+	}
+	return nil
 }
 
 func (a *Archive) GetDir() string {
