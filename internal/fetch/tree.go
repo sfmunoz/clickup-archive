@@ -5,21 +5,22 @@ import (
 	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 )
 
 type FetchTree struct {
-	clickupDir string
-	client     *Client
+	archive *archive.Archive
+	client  *Client
 }
 
-func NewFetchTree(clickupDir string) (*FetchTree, error) {
+func NewFetchTree(a *archive.Archive) (*FetchTree, error) {
 	client, err := NewClient()
 	if err != nil {
 		return nil, err
 	}
 	return &FetchTree{
-		clickupDir: clickupDir,
-		client:     client,
+		archive: a,
+		client:  client,
 	}, nil
 }
 
@@ -117,7 +118,7 @@ func (f *FetchTree) Run() error {
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		dir := filepath.Join(f.clickupDir, workspace.ID)
+		dir := filepath.Join(f.archive.GetDir(), workspace.ID)
 		if err := jsonDump(workspace, dir); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}

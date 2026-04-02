@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 	"github.com/sfmunoz/clickup-archive/internal/fetch"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,11 @@ Subtasks are stored alongside top-level tasks, not nested under them.
 
 Requires the CLICKUP_TOKEN environment variable (personal API token).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := fetch.NewFetchTree(clickupDir())
+		a, err := archive.LoadArchive(clickupDir())
+		if err != nil {
+			return err
+		}
+		f, err := fetch.NewFetchTree(a)
 		if err != nil {
 			return err
 		}

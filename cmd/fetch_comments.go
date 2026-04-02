@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 	"github.com/sfmunoz/clickup-archive/internal/fetch"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,11 @@ task is skipped. If it is absent, <task-id>/comments/ is deleted and fully re-fe
 
 Requires the CLICKUP_TOKEN environment variable (personal API token).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		f, err := fetch.NewFetchComments(clickupDir())
+		a, err := archive.LoadArchive(clickupDir())
+		if err != nil {
+			return err
+		}
+		f, err := fetch.NewFetchComments(a)
 		if err != nil {
 			return err
 		}

@@ -8,21 +8,22 @@ import (
 	"strings"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 )
 
 type FetchComments struct {
-	clickupDir string
-	client     *Client
+	archive *archive.Archive
+	client  *Client
 }
 
-func NewFetchComments(clickupDir string) (*FetchComments, error) {
+func NewFetchComments(a *archive.Archive) (*FetchComments, error) {
 	client, err := NewClient()
 	if err != nil {
 		return nil, err
 	}
 	return &FetchComments{
-		clickupDir: clickupDir,
-		client:     client,
+		archive: a,
+		client:  client,
 	}, nil
 }
 
@@ -85,14 +86,14 @@ func (f *FetchComments) processTask(taskID, taskDir string) error {
 }
 
 func (f *FetchComments) Run() error {
-	return filepath.WalkDir(f.clickupDir, func(path string, d fs.DirEntry, err error) error {
+	return filepath.WalkDir(f.archive.GetDir(), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if !d.IsDir() {
 			return nil
 		}
-		rel, err := filepath.Rel(f.clickupDir, path)
+		rel, err := filepath.Rel(f.archive.GetDir(), path)
 		if err != nil || rel == "." {
 			return nil
 		}
