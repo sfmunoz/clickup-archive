@@ -66,9 +66,9 @@ func (s *Space) SaveFolder(f *api.Folder, update bool) error {
 		break
 	}
 	if fOld == nil {
-		log.Info("creating folder '%s=%s'", f.ID, f.Name)
+		log.Info("creating folder", "id", f.ID, "name", f.Name)
 	} else {
-		log.Warn("updating folder '%s=%s' -> '%s=%s'", fOld.Data.ID, fOld.Data.Name, f.ID, f.Name)
+		log.Warn("updating folder", "id_old", fOld.Data.ID, "name_old", fOld.Data.Name, "id_new", f.ID, "name_new", f.Name)
 	}
 	dir := folderDir(s.GetDir(), f.ID)
 	if err := jsonSave(f, dir); err != nil {

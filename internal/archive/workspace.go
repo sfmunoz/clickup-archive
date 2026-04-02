@@ -66,9 +66,9 @@ func (w *Workspace) SaveSpace(s *api.Space, update bool) error {
 		break
 	}
 	if sOld == nil {
-		log.Info("creating space '%s=%s'", s.ID, s.Name)
+		log.Info("creating space", "id", s.ID, "name", s.Name)
 	} else {
-		log.Warn("updating space '%s=%s' -> '%s=%s'", sOld.Data.ID, sOld.Data.Name, s.ID, s.Name)
+		log.Warn("updating space", "id_old", sOld.Data.ID, "name_old", sOld.Data.Name, "id_new", s.ID, "name_new", s.Name)
 	}
 	dir := spaceDir(w.GetDir(), s.ID)
 	if err := jsonSave(s, dir); err != nil {

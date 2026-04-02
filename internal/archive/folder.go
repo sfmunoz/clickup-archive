@@ -66,9 +66,9 @@ func (f *Folder) SaveList(l *api.List, update bool) error {
 		break
 	}
 	if lOld == nil {
-		log.Info("creating list '%s=%s'", l.ID, l.Name)
+		log.Info("creating list", "id", l.ID, "name", l.Name)
 	} else {
-		log.Warn("updating list '%s=%s' -> '%s=%s'", lOld.Data.ID, lOld.Data.Name, l.ID, l.Name)
+		log.Warn("updating list", "id_old", lOld.Data.ID, "name_old", lOld.Data.Name, "id_new", l.ID, "name_new", l.Name)
 	}
 	dir := listDir(f.GetDir(), l.ID)
 	if err := jsonSave(l, dir); err != nil {

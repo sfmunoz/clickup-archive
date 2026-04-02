@@ -69,9 +69,9 @@ func (t *Task) SaveComment(c *api.Comment, update bool) error {
 		break
 	}
 	if cOld == nil {
-		log.Info("creating comment '%s'", c.ID)
+		log.Info("creating comment", "id", c.ID)
 	} else {
-		log.Warn("updating comment '%s'", c.ID)
+		log.Warn("updating comment", "id_old", cOld.Data.ID, "id_new", c.ID)
 	}
 	dir := commentDir(t.GetDir(), c.ID)
 	if err := jsonSave(c, dir); err != nil {

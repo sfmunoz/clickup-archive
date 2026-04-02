@@ -59,9 +59,9 @@ func (a *Archive) SaveWorkspace(w *api.Workspace, update bool) error {
 		break
 	}
 	if wOld == nil {
-		log.Info("creating workspace '%s=%s'", w.ID, w.Name)
+		log.Info("creating workspace", "id", w.ID, "name", w.Name)
 	} else {
-		log.Warn("updating workspace '%s=%s' -> '%s=%s'", wOld.Data.ID, wOld.Data.Name, w.ID, w.Name)
+		log.Warn("updating workspace", "id_old", wOld.Data.ID, "name_old", wOld.Data.Name, "id_new", w.ID, "name_new", w.Name)
 	}
 	dir := workspaceDir(a.GetDir(), w.ID)
 	if err := jsonSave(w, dir); err != nil {

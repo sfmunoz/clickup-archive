@@ -66,9 +66,9 @@ func (l *List) SaveTask(t *api.Task, update bool) error {
 		break
 	}
 	if tOld == nil {
-		log.Info("creating task '%s=%s'", t.ID, t.Name)
+		log.Info("creating task", "id", t.ID, "name", t.Name)
 	} else {
-		log.Warn("updating task '%s=%s' -> '%s=%s'", tOld.Data.ID, tOld.Data.Name, t.ID, t.Name)
+		log.Warn("updating task", "id_old", tOld.Data.ID, "name_old", tOld.Data.Name, "id_new", t.ID, "name_new", t.Name)
 	}
 	dir := taskDir(l.GetDir(), t.ID)
 	if err := jsonSave(t, dir); err != nil {
