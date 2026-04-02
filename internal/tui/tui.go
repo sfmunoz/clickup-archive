@@ -29,18 +29,24 @@ var (
 
 type Tui struct {
 	archive *archive.Archive
+	items   *Items
 	stats   *Stats
 	width   int
 	height  int
 }
 
 func NewTui(a *archive.Archive) (*Tui, error) {
+	items, err := NewItems(a)
+	if err != nil {
+		return nil, err
+	}
 	stats, err := NewStats(a)
 	if err != nil {
 		return nil, err
 	}
 	return &Tui{
 		archive: a,
+		items:   items,
 		stats:   stats,
 		width:   0,
 		height:  0,
@@ -57,9 +63,10 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		t.width = msg.Width
 		t.height = msg.Height
-		var cmd tea.Cmd
-		t.stats, cmd = t.stats.Update(msg)
-		cmds = append(cmds, cmd)
+		var cmd1, cmd2 tea.Cmd
+		t.items, cmd1 = t.items.Update(msg)
+		t.stats, cmd2 = t.stats.Update(msg)
+		cmds = append(cmds, cmd1, cmd2)
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -67,6 +74,10 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "s":
 			var cmd tea.Cmd
 			t.stats, cmd = t.stats.Update(StatsVisibleToggleMsg{})
+			cmds = append(cmds, cmd)
+		default:
+			var cmd tea.Cmd
+			t.items, cmd = t.items.Update(msg)
 			cmds = append(cmds, cmd)
 		}
 	}
@@ -93,7 +104,7 @@ func (t *Tui) View() tea.View {
 	content := contentStyle.
 		Width(contentW - lipgloss.Width(sidebarStyle.Render(""))). // subtract border
 		Height(bodyH).
-		Render("Select a list to browse tasks\n\n" + t.stats.View())
+		Render("Select a list to browse tasks\n\n" + t.stats.View() + "\n\n" + t.items.View())
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
