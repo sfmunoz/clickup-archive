@@ -19,5 +19,5 @@ func NewComment(parent *Task, dir string) (*Comment, error) {
 }
 
 func (c *Comment) GetDir() string {
-	return filepath.Join(c.Parent.GetDir(), c.Data.ID)
+	return filepath.Join(c.Parent.GetDir(), "comments", c.Data.ID)
 }
