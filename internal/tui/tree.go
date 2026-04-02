@@ -19,11 +19,6 @@ type Node struct {
 	Children []*Node
 	Open     bool
 	Cursor   bool
-
-	dir            string // path to this node's own directory (index.json lives here)
-	childrenDir    string // directory to scan for children
-	childrenLoaded bool
-	level          int // 0=workspace … 5=comment
 }
 
 func NewNode(name string) *Node {
@@ -83,7 +78,7 @@ func (n *Node) String() string {
 		}
 		return n.Name
 	}
-	hasOrMayHaveChildren := len(n.Children) > 0 || (n.childrenDir != "" && !n.childrenLoaded)
+	hasOrMayHaveChildren := len(n.Children) > 0
 	if !hasOrMayHaveChildren {
 		return name()
 	}
