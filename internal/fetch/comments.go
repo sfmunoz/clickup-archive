@@ -43,7 +43,7 @@ func (f *FetchComments) fetchAllComments(task *archive.Task) (int, error) {
 			break
 		}
 		for _, comment := range resp.Comments {
-			if err := task.SaveComment(&comment, false); err != nil {
+			if _, err := task.SaveComment(&comment, false); err != nil {
 				return total, fmt.Errorf("dump comment %s for task %s: %w", comment.ID, taskID, err)
 			}
 		}

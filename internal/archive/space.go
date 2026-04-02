@@ -53,31 +53,29 @@ func (s *Space) GetDir() string {
 	return spaceDir(s.Parent.GetDir(), s.Data.ID)
 }
 
-func (s *Space) SaveFolder(f *api.Folder, update bool) error {
+func (s *Space) SaveFolder(f *api.Folder, update bool) (*Folder, error) {
 	var fOld *Folder = nil
 	for _, c := range s.Children {
 		if c.Data.ID != f.ID {
 			continue
 		}
 		if !update {
-			return fmt.Errorf("folder '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+			return nil, fmt.Errorf("folder '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
 		}
 		fOld = c
 		break
 	}
-	if fOld == nil {
-		log.Info("creating folder", "id", f.ID, "name", f.Name)
-	} else {
-		log.Warn("updating folder", "id_old", fOld.Data.ID, "name_old", fOld.Data.Name, "id_new", f.ID, "name_new", f.Name)
-	}
 	dir := folderDir(s.GetDir(), f.ID)
 	if err := jsonSave(f, dir); err != nil {
-		return err
+		return nil, err
 	}
 	if fOld == nil {
-		s.Children = append(s.Children, &Folder{Parent: s, Data: f, Children: make([]*List, 0)})
-	} else {
-		fOld.Data = f
+		log.Info("folder created", "id", f.ID, "name", f.Name)
+		fNew := &Folder{Parent: s, Data: f, Children: make([]*List, 0)}
+		s.Children = append(s.Children, fNew)
+		return fNew, nil
 	}
-	return nil
+	log.Warn("folder updated", "id_old", fOld.Data.ID, "name_old", fOld.Data.Name, "id_new", f.ID, "name_new", f.Name)
+	fOld.Data = f
+	return fOld, nil
 }

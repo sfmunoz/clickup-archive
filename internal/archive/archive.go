@@ -46,33 +46,31 @@ func LoadArchive(dir string) (*Archive, error) {
 	return a, nil
 }
 
-func (a *Archive) SaveWorkspace(w *api.Workspace, update bool) error {
+func (a *Archive) SaveWorkspace(w *api.Workspace, update bool) (*Workspace, error) {
 	var wOld *Workspace = nil
 	for _, c := range a.Children {
 		if c.Data.ID != w.ID {
 			continue
 		}
 		if !update {
-			return fmt.Errorf("workspace '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+			return nil, fmt.Errorf("workspace '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
 		}
 		wOld = c
 		break
 	}
-	if wOld == nil {
-		log.Info("creating workspace", "id", w.ID, "name", w.Name)
-	} else {
-		log.Warn("updating workspace", "id_old", wOld.Data.ID, "name_old", wOld.Data.Name, "id_new", w.ID, "name_new", w.Name)
-	}
 	dir := workspaceDir(a.GetDir(), w.ID)
 	if err := jsonSave(w, dir); err != nil {
-		return err
+		return nil, err
 	}
 	if wOld == nil {
-		a.Children = append(a.Children, &Workspace{Parent: a, Data: w, Children: make([]*Space, 0)})
-	} else {
-		wOld.Data = w
+		log.Info("workspace created", "id", w.ID, "name", w.Name)
+		wNew := &Workspace{Parent: a, Data: w, Children: make([]*Space, 0)}
+		a.Children = append(a.Children, wNew)
+		return wNew, nil
 	}
-	return nil
+	log.Warn("workspace updated", "id_old", wOld.Data.ID, "name_old", wOld.Data.Name, "id_new", w.ID, "name_new", w.Name)
+	wOld.Data = w
+	return wOld, nil
 }
 
 func (a *Archive) GetDir() string {

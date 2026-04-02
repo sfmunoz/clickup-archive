@@ -53,31 +53,29 @@ func (l *List) GetDir() string {
 	return listDir(l.Parent.GetDir(), l.Data.ID)
 }
 
-func (l *List) SaveTask(t *api.Task, update bool) error {
+func (l *List) SaveTask(t *api.Task, update bool) (*Task, error) {
 	var tOld *Task = nil
 	for _, c := range l.Children {
 		if c.Data.ID != t.ID {
 			continue
 		}
 		if !update {
-			return fmt.Errorf("task '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+			return nil, fmt.Errorf("task '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
 		}
 		tOld = c
 		break
 	}
-	if tOld == nil {
-		log.Info("creating task", "id", t.ID, "name", t.Name)
-	} else {
-		log.Warn("updating task", "id_old", tOld.Data.ID, "name_old", tOld.Data.Name, "id_new", t.ID, "name_new", t.Name)
-	}
 	dir := taskDir(l.GetDir(), t.ID)
 	if err := jsonSave(t, dir); err != nil {
-		return err
+		return nil, err
 	}
 	if tOld == nil {
-		l.Children = append(l.Children, &Task{Parent: l, Data: t, Children: make([]*Comment, 0)})
-	} else {
-		tOld.Data = t
+		log.Info("task created", "id", t.ID, "name", t.Name)
+		tNew := &Task{Parent: l, Data: t, Children: make([]*Comment, 0)}
+		l.Children = append(l.Children, tNew)
+		return tNew, nil
 	}
-	return nil
+	log.Warn("task updated", "id_old", tOld.Data.ID, "name_old", tOld.Data.Name, "id_new", t.ID, "name_new", t.Name)
+	tOld.Data = t
+	return tOld, nil
 }

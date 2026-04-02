@@ -25,7 +25,7 @@ func NewFetchTree(a *archive.Archive) (*FetchTree, error) {
 
 func (f *FetchTree) dumpTask(task api.Task, archLi *archive.List) error {
 	log.Info("Task", "id", task.ID, "name", task.Name)
-	if err := archLi.SaveTask(&task, false); err != nil {
+	if _, err := archLi.SaveTask(&task, false); err != nil {
 		return fmt.Errorf("dump task %s: %w", task.ID, err)
 	}
 	for _, sub := range task.Subtasks {
@@ -62,12 +62,9 @@ func (f *FetchTree) getLists(folderID string, archFo *archive.Folder) error {
 	}
 	for _, list := range resp.Lists {
 		log.Info("List", "id", list.ID, "name", list.Name)
-		if err := archFo.SaveList(&list, false); err != nil {
-			return fmt.Errorf("dump list %s: %w", list.ID, err)
-		}
-		archLi, err := archive.LoadList(archFo, list.ID)
+		archLi, err := archFo.SaveList(&list, false)
 		if err != nil {
-			return fmt.Errorf("load list %s: %w", list.ID, err)
+			return err
 		}
 		if err := f.getTasks(list.ID, archLi); err != nil {
 			return err
@@ -83,12 +80,9 @@ func (f *FetchTree) getFolders(spaceID string, archSp *archive.Space) error {
 	}
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "id", folder.ID, "name", folder.Name)
-		if err := archSp.SaveFolder(&folder, false); err != nil {
-			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
-		}
-		archFo, err := archive.LoadFolder(archSp, folder.ID)
+		archFo, err := archSp.SaveFolder(&folder, false)
 		if err != nil {
-			return fmt.Errorf("load folder %s: %w", folder.ID, err)
+			return err
 		}
 		if err := f.getLists(folder.ID, archFo); err != nil {
 			return err
@@ -104,12 +98,9 @@ func (f *FetchTree) getSpaces(workspaceID string, archWs *archive.Workspace) err
 	}
 	for _, space := range resp.Spaces {
 		log.Info("Space", "id", space.ID, "name", space.Name)
-		if err := archWs.SaveSpace(&space, false); err != nil {
-			return fmt.Errorf("dump space %s: %w", space.ID, err)
-		}
-		archSp, err := archive.LoadSpace(archWs, space.ID)
+		archSp, err := archWs.SaveSpace(&space, false)
 		if err != nil {
-			return fmt.Errorf("load space %s: %w", space.ID, err)
+			return err
 		}
 		if err := f.getFolders(space.ID, archSp); err != nil {
 			return err
@@ -125,12 +116,9 @@ func (f *FetchTree) Run() error {
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		if err := f.archive.SaveWorkspace(&workspace, false); err != nil {
-			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
-		}
-		archWs, err := archive.LoadWorkspace(f.archive, workspace.ID)
+		archWs, err := f.archive.SaveWorkspace(&workspace, false)
 		if err != nil {
-			return fmt.Errorf("load workspace %s: %w", workspace.ID, err)
+			return err
 		}
 		if err := f.getSpaces(workspace.ID, archWs); err != nil {
 			return err

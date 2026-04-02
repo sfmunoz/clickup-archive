@@ -53,31 +53,29 @@ func (w *Workspace) GetDir() string {
 	return workspaceDir(w.Parent.GetDir(), w.Data.ID)
 }
 
-func (w *Workspace) SaveSpace(s *api.Space, update bool) error {
+func (w *Workspace) SaveSpace(s *api.Space, update bool) (*Space, error) {
 	var sOld *Space = nil
 	for _, c := range w.Children {
 		if c.Data.ID != s.ID {
 			continue
 		}
 		if !update {
-			return fmt.Errorf("space '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
+			return nil, fmt.Errorf("space '%s=%s' already exists and 'update' is false", c.Data.ID, c.Data.Name)
 		}
 		sOld = c
 		break
 	}
-	if sOld == nil {
-		log.Info("creating space", "id", s.ID, "name", s.Name)
-	} else {
-		log.Warn("updating space", "id_old", sOld.Data.ID, "name_old", sOld.Data.Name, "id_new", s.ID, "name_new", s.Name)
-	}
 	dir := spaceDir(w.GetDir(), s.ID)
 	if err := jsonSave(s, dir); err != nil {
-		return err
+		return nil, err
 	}
 	if sOld == nil {
-		w.Children = append(w.Children, &Space{Parent: w, Data: s, Children: make([]*Folder, 0)})
-	} else {
-		sOld.Data = s
+		log.Info("space created", "id", s.ID, "name", s.Name)
+		sNew := &Space{Parent: w, Data: s, Children: make([]*Folder, 0)}
+		w.Children = append(w.Children, sNew)
+		return sNew, nil
 	}
-	return nil
+	log.Warn("space updated", "id_old", sOld.Data.ID, "name_old", sOld.Data.Name, "id_new", s.ID, "name_new", s.Name)
+	sOld.Data = s
+	return sOld, nil
 }

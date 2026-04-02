@@ -56,33 +56,31 @@ func (t *Task) GetDir() string {
 	return taskDir(t.Parent.GetDir(), t.Data.ID)
 }
 
-func (t *Task) SaveComment(c *api.Comment, update bool) error {
+func (t *Task) SaveComment(c *api.Comment, update bool) (*Comment, error) {
 	var cOld *Comment = nil
 	for _, ch := range t.Children {
 		if ch.Data.ID != c.ID {
 			continue
 		}
 		if !update {
-			return fmt.Errorf("comment '%s' already exists and 'update' is false", ch.Data.ID)
+			return nil, fmt.Errorf("comment '%s' already exists and 'update' is false", ch.Data.ID)
 		}
 		cOld = ch
 		break
 	}
-	if cOld == nil {
-		log.Info("creating comment", "id", c.ID)
-	} else {
-		log.Warn("updating comment", "id_old", cOld.Data.ID, "id_new", c.ID)
-	}
 	dir := commentDir(t.GetDir(), c.ID)
 	if err := jsonSave(c, dir); err != nil {
-		return err
+		return nil, err
 	}
 	if cOld == nil {
-		t.Children = append(t.Children, &Comment{Parent: t, Data: c, Children: make([]*struct{}, 0)})
-	} else {
-		cOld.Data = c
+		log.Info("comment created", "id", c.ID)
+		cNew := &Comment{Parent: t, Data: c, Children: make([]*struct{}, 0)}
+		t.Children = append(t.Children, cNew)
+		return cNew, nil
 	}
-	return nil
+	log.Warn("comment updated", "id_old", cOld.Data.ID, "id_new", c.ID)
+	cOld.Data = c
+	return cOld, nil
 }
 
 func (t *Task) IsCommentsDone() bool {
