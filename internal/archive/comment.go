@@ -15,7 +15,7 @@ type Comment struct {
 }
 
 func LoadComment(parent *Task, id string) (*Comment, error) {
-	dir := filepath.Join(parent.GetDir(), "comments", id)
+	dir := commentDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
@@ -35,5 +35,5 @@ func LoadComment(parent *Task, id string) (*Comment, error) {
 }
 
 func (c *Comment) GetDir() string {
-	return filepath.Join(c.Parent.GetDir(), "comments", c.Data.ID)
+	return commentDir(c.Parent.GetDir(), c.Data.ID)
 }

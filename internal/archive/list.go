@@ -3,7 +3,6 @@ package archive
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 )
@@ -15,11 +14,11 @@ type List struct {
 }
 
 func LoadList(parent *Folder, id string) (*List, error) {
-	dir := filepath.Join(parent.GetDir(), id)
+	dir := listDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
-	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	buf, err := os.ReadFile(indexFile(dir))
 	if err != nil {
 		return nil, err
 	}
@@ -50,5 +49,5 @@ func LoadList(parent *Folder, id string) (*List, error) {
 }
 
 func (l *List) GetDir() string {
-	return filepath.Join(l.Parent.GetDir(), l.Data.ID)
+	return listDir(l.Parent.GetDir(), l.Data.ID)
 }

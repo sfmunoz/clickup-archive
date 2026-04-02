@@ -3,7 +3,6 @@ package archive
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 )
@@ -15,11 +14,11 @@ type Task struct {
 }
 
 func LoadTask(parent *List, id string) (*Task, error) {
-	dir := filepath.Join(parent.GetDir(), id)
+	dir := taskDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
-	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	buf, err := os.ReadFile(indexFile(dir))
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +31,7 @@ func LoadTask(parent *List, id string) (*Task, error) {
 		Data:     &data,
 		Children: make([]*Comment, 0),
 	}
-	commentsDir := filepath.Join(dir, "comments")
-	entries, err := os.ReadDir(commentsDir)
+	entries, err := os.ReadDir(commentsDir(dir))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return t, nil
@@ -54,5 +52,5 @@ func LoadTask(parent *List, id string) (*Task, error) {
 }
 
 func (t *Task) GetDir() string {
-	return filepath.Join(t.Parent.GetDir(), t.Data.ID)
+	return taskDir(t.Parent.GetDir(), t.Data.ID)
 }

@@ -3,7 +3,6 @@ package archive
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 )
@@ -15,11 +14,11 @@ type Space struct {
 }
 
 func LoadSpace(parent *Workspace, id string) (*Space, error) {
-	dir := filepath.Join(parent.GetDir(), id)
+	dir := spaceDir(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
-	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	buf, err := os.ReadFile(indexFile(dir))
 	if err != nil {
 		return nil, err
 	}
@@ -50,5 +49,5 @@ func LoadSpace(parent *Workspace, id string) (*Space, error) {
 }
 
 func (s *Space) GetDir() string {
-	return filepath.Join(s.Parent.GetDir(), s.Data.ID)
+	return spaceDir(s.Parent.GetDir(), s.Data.ID)
 }
