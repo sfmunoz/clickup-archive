@@ -125,12 +125,9 @@ func (f *FetchTree) Run() error {
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		if err := f.archive.SaveWorkspace(&workspace, false); err != nil {
-			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
-		}
-		archWs, err := archive.LoadWorkspace(f.archive, workspace.ID)
+		archWs, err := f.archive.SaveWorkspace(&workspace)
 		if err != nil {
-			return fmt.Errorf("load workspace %s: %w", workspace.ID, err)
+			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}
 		if err := f.getSpaces(workspace.ID, archWs); err != nil {
 			return err

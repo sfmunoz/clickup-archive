@@ -36,6 +36,7 @@ func LoadWorkspace(parent *Archive, id string) (*Workspace, error) {
 		Data:     &data,
 		Children: make([]*Space, 0),
 	}
+	w.Parent.Children = append(w.Parent.Children, w)
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
