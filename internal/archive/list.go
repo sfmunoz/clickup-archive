@@ -12,7 +12,7 @@ type List struct {
 	Children []*Task
 }
 
-func loadList(dir string, parent *Folder, space *Space) (*List, error) {
+func NewList(parent *Folder, dir string) (*List, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

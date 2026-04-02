@@ -12,7 +12,7 @@ type Workspace struct {
 	Children []*Space
 }
 
-func loadWorkspace(dir string) (*Workspace, error) {
+func NewWorkspace(parent *Archive, dir string) (*Workspace, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

@@ -12,7 +12,7 @@ type Comment struct {
 	Children []*struct{}
 }
 
-func loadComment(dir string, parent *Task) (*Comment, error) {
+func NewComment(parent *Task, dir string) (*Comment, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

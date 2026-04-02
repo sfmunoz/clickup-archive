@@ -12,7 +12,7 @@ type Task struct {
 	Children []*Comment
 }
 
-func loadTask(dir string, parent *List) (*Task, error) {
+func NewTask(parent *List, dir string) (*Task, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

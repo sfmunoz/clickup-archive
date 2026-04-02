@@ -14,7 +14,7 @@ type Archive struct {
 	Children []*Workspace
 }
 
-func Load(dir string) (*Archive, error) {
+func NewArchive(dir string) (*Archive, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

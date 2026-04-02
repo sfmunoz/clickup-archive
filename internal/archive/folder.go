@@ -12,7 +12,7 @@ type Folder struct {
 	Children []*List
 }
 
-func loadFolder(dir string, parent *Space) (*Folder, error) {
+func NewFolder(parent *Space, dir string) (*Folder, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }

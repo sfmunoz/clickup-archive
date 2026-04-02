@@ -12,7 +12,7 @@ type Space struct {
 	Children []*Folder
 }
 
-func loadSpace(dir string, parent *Workspace) (*Space, error) {
+func NewSpace(parent *Workspace, dir string) (*Space, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }
