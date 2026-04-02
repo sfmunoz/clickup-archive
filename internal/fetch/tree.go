@@ -2,7 +2,6 @@ package fetch
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 	"github.com/sfmunoz/clickup-archive/internal/archive"
@@ -24,21 +23,20 @@ func NewFetchTree(a *archive.Archive) (*FetchTree, error) {
 	}, nil
 }
 
-func (f *FetchTree) dumpTask(task api.Task, baseDir string) error {
+func (f *FetchTree) dumpTask(task api.Task, archLi *archive.List) error {
 	log.Info("Task", "id", task.ID, "name", task.Name)
-	dir := filepath.Join(baseDir, task.ID)
-	if err := jsonDump(task, dir); err != nil {
+	if err := archLi.SaveTask(&task, false); err != nil {
 		return fmt.Errorf("dump task %s: %w", task.ID, err)
 	}
 	for _, sub := range task.Subtasks {
-		if err := f.dumpTask(sub, baseDir); err != nil {
+		if err := f.dumpTask(sub, archLi); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (f *FetchTree) getTasks(listID, baseDir string) error {
+func (f *FetchTree) getTasks(listID string, archLi *archive.List) error {
 	for page := 0; ; page++ {
 		var resp api.TasksResponse
 		path := fmt.Sprintf("/list/%s/task?include_closed=true&subtasks=true&page=%d", listID, page)
@@ -46,7 +44,7 @@ func (f *FetchTree) getTasks(listID, baseDir string) error {
 			return fmt.Errorf("fetch tasks page %d: %w", page, err)
 		}
 		for _, task := range resp.Tasks {
-			if err := f.dumpTask(task, baseDir); err != nil {
+			if err := f.dumpTask(task, archLi); err != nil {
 				return err
 			}
 		}
@@ -57,54 +55,63 @@ func (f *FetchTree) getTasks(listID, baseDir string) error {
 	return nil
 }
 
-func (f *FetchTree) getLists(folderID, baseDir string) error {
+func (f *FetchTree) getLists(folderID string, archFo *archive.Folder) error {
 	var resp api.ListsResponse
 	if err := f.client.HttpGet("/folder/"+folderID+"/list", &resp); err != nil {
 		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
 		log.Info("List", "id", list.ID, "name", list.Name)
-		dir := filepath.Join(baseDir, list.ID)
-		if err := jsonDump(list, dir); err != nil {
+		if err := archFo.SaveList(&list, false); err != nil {
 			return fmt.Errorf("dump list %s: %w", list.ID, err)
 		}
-		if err := f.getTasks(list.ID, dir); err != nil {
+		archLi, err := archive.LoadList(archFo, list.ID)
+		if err != nil {
+			return fmt.Errorf("load list %s: %w", list.ID, err)
+		}
+		if err := f.getTasks(list.ID, archLi); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (f *FetchTree) getFolders(spaceID, baseDir string) error {
+func (f *FetchTree) getFolders(spaceID string, archSp *archive.Space) error {
 	var resp api.FoldersResponse
 	if err := f.client.HttpGet("/space/"+spaceID+"/folder", &resp); err != nil {
 		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "id", folder.ID, "name", folder.Name)
-		dir := filepath.Join(baseDir, folder.ID)
-		if err := jsonDump(folder, dir); err != nil {
+		if err := archSp.SaveFolder(&folder, false); err != nil {
 			return fmt.Errorf("dump folder %s: %w", folder.ID, err)
 		}
-		if err := f.getLists(folder.ID, dir); err != nil {
+		archFo, err := archive.LoadFolder(archSp, folder.ID)
+		if err != nil {
+			return fmt.Errorf("load folder %s: %w", folder.ID, err)
+		}
+		if err := f.getLists(folder.ID, archFo); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (f *FetchTree) getSpaces(workspaceID, baseDir string) error {
+func (f *FetchTree) getSpaces(workspaceID string, archWs *archive.Workspace) error {
 	var resp api.SpacesResponse
 	if err := f.client.HttpGet("/team/"+workspaceID+"/space", &resp); err != nil {
 		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
 		log.Info("Space", "id", space.ID, "name", space.Name)
-		dir := filepath.Join(baseDir, space.ID)
-		if err := jsonDump(space, dir); err != nil {
+		if err := archWs.SaveSpace(&space, false); err != nil {
 			return fmt.Errorf("dump space %s: %w", space.ID, err)
 		}
-		if err := f.getFolders(space.ID, dir); err != nil {
+		archSp, err := archive.LoadSpace(archWs, space.ID)
+		if err != nil {
+			return fmt.Errorf("load space %s: %w", space.ID, err)
+		}
+		if err := f.getFolders(space.ID, archSp); err != nil {
 			return err
 		}
 	}
@@ -118,11 +125,14 @@ func (f *FetchTree) Run() error {
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		dir := filepath.Join(f.archive.GetDir(), workspace.ID)
-		if err := jsonDump(workspace, dir); err != nil {
+		if err := f.archive.SaveWorkspace(&workspace, false); err != nil {
 			return fmt.Errorf("dump workspace %s: %w", workspace.ID, err)
 		}
-		if err := f.getSpaces(workspace.ID, dir); err != nil {
+		archWs, err := archive.LoadWorkspace(f.archive, workspace.ID)
+		if err != nil {
+			return fmt.Errorf("load workspace %s: %w", workspace.ID, err)
+		}
+		if err := f.getSpaces(workspace.ID, archWs); err != nil {
 			return err
 		}
 	}

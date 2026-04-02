@@ -2,10 +2,6 @@ package fetch
 
 import (
 	"fmt"
-	"io/fs"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
 	"github.com/sfmunoz/clickup-archive/internal/archive"
@@ -27,7 +23,8 @@ func NewFetchComments(a *archive.Archive) (*FetchComments, error) {
 	}, nil
 }
 
-func (f *FetchComments) fetchAllComments(taskID, commentsDir string) (int, error) {
+func (f *FetchComments) fetchAllComments(task *archive.Task) (int, error) {
+	taskID := task.Data.ID
 	log.Info("Fetching comments", "task_id", taskID)
 	startID := ""
 	startDate := ""
@@ -46,8 +43,7 @@ func (f *FetchComments) fetchAllComments(taskID, commentsDir string) (int, error
 			break
 		}
 		for _, comment := range resp.Comments {
-			commentDir := filepath.Join(commentsDir, comment.ID)
-			if err := jsonDump(comment, commentDir); err != nil {
+			if err := task.SaveComment(&comment, false); err != nil {
 				return total, fmt.Errorf("dump comment %s for task %s: %w", comment.ID, taskID, err)
 			}
 		}
@@ -59,52 +55,42 @@ func (f *FetchComments) fetchAllComments(taskID, commentsDir string) (int, error
 	return total, nil
 }
 
-func (f *FetchComments) processTask(taskID, taskDir string) error {
-	doneFile := filepath.Join(taskDir, "comments.done")
-	commentsDir := filepath.Join(taskDir, "comments")
-
-	if _, err := os.Stat(doneFile); err == nil {
-		log.Info("Comments already done", "task_id", taskID)
+func (f *FetchComments) processTask(task *archive.Task) error {
+	if task.IsCommentsDone() {
+		log.Info("Comments already done", "task_id", task.Data.ID)
 		return nil
 	}
 
-	if err := os.RemoveAll(commentsDir); err != nil {
-		return fmt.Errorf("remove comments dir for task %s: %w", taskID, err)
+	if err := task.ClearComments(); err != nil {
+		return fmt.Errorf("remove comments dir for task %s: %w", task.Data.ID, err)
 	}
 
-	total, err := f.fetchAllComments(taskID, commentsDir)
+	total, err := f.fetchAllComments(task)
 	if err != nil {
 		return err
 	}
 
-	log.Info("Comments", "task_id", taskID, "count", total)
+	log.Info("Comments", "task_id", task.Data.ID, "count", total)
 
-	if err := os.WriteFile(doneFile, nil, 0o644); err != nil {
-		return fmt.Errorf("write comments.done for task %s: %w", taskID, err)
+	if err := task.MarkCommentsDone(); err != nil {
+		return fmt.Errorf("write comments.done for task %s: %w", task.Data.ID, err)
 	}
 	return nil
 }
 
 func (f *FetchComments) Run() error {
-	return filepath.WalkDir(f.archive.GetDir(), func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+	for _, ws := range f.archive.Children {
+		for _, sp := range ws.Children {
+			for _, fo := range sp.Children {
+				for _, li := range fo.Children {
+					for _, ta := range li.Children {
+						if err := f.processTask(ta); err != nil {
+							return err
+						}
+					}
+				}
+			}
 		}
-		if !d.IsDir() {
-			return nil
-		}
-		rel, err := filepath.Rel(f.archive.GetDir(), path)
-		if err != nil || rel == "." {
-			return nil
-		}
-		depth := len(strings.Split(rel, string(filepath.Separator)))
-		if depth < 5 {
-			return nil
-		}
-		if depth > 5 {
-			return fs.SkipDir
-		}
-		// depth == 5: task directory (workspace/space/folder/list/task)
-		return f.processTask(filepath.Base(path), path)
-	})
+	}
+	return nil
 }
