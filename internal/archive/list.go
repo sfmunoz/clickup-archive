@@ -1,7 +1,7 @@
 package archive
 
 import (
-	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -14,8 +14,30 @@ type List struct {
 }
 
 func NewList(parent *Folder, dir string) (*List, error) {
-	log.Fatal("not implemented")
-	return nil, fmt.Errorf("not implemented")
+	dir = filepath.Join(parent.GetDir(), dir)
+	if err := isFolder(dir); err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	l := &List{
+		Parent:   parent,
+		Data:     api.List{},
+		Children: make([]*Task, 0),
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		t, err := NewTask(l, e.Name())
+		if err != nil {
+			return nil, err
+		}
+		l.Children = append(l.Children, t)
+	}
+	return l, nil
 }
 
 func (l *List) GetDir() string {

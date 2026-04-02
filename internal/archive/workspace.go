@@ -1,7 +1,7 @@
 package archive
 
 import (
-	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -14,8 +14,30 @@ type Workspace struct {
 }
 
 func NewWorkspace(parent *Archive, dir string) (*Workspace, error) {
-	log.Fatal("not implemented")
-	return nil, fmt.Errorf("not implemented")
+	dir = filepath.Join(parent.GetDir(), dir)
+	if err := isFolder(dir); err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	w := &Workspace{
+		Parent:   parent,
+		Data:     api.Workspace{},
+		Children: make([]*Space, 0),
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		s, err := NewSpace(w, e.Name())
+		if err != nil {
+			return nil, err
+		}
+		w.Children = append(w.Children, s)
+	}
+	return w, nil
 }
 
 func (w *Workspace) GetDir() string {

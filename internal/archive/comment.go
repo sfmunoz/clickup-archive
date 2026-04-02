@@ -1,7 +1,6 @@
 package archive
 
 import (
-	"fmt"
 	"path/filepath"
 
 	"github.com/sfmunoz/clickup-archive/internal/api"
@@ -14,8 +13,15 @@ type Comment struct {
 }
 
 func NewComment(parent *Task, dir string) (*Comment, error) {
-	log.Fatal("not implemented")
-	return nil, fmt.Errorf("not implemented")
+	dir = filepath.Join(parent.GetDir(), "comments", dir)
+	if err := isFolder(dir); err != nil {
+		return nil, err
+	}
+	return &Comment{
+		Parent:   parent,
+		Data:     api.Comment{},
+		Children: make([]*struct{}, 0),
+	}, nil
 }
 
 func (c *Comment) GetDir() string {
