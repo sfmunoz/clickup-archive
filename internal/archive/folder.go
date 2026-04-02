@@ -14,8 +14,8 @@ type Folder struct {
 	Children []*List
 }
 
-func LoadFolder(parent *Space, dir string) (*Folder, error) {
-	dir = filepath.Join(parent.GetDir(), dir)
+func LoadFolder(parent *Space, id string) (*Folder, error) {
+	dir := filepath.Join(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}

@@ -14,8 +14,8 @@ type Workspace struct {
 	Children []*Space
 }
 
-func LoadWorkspace(parent *Archive, dir string) (*Workspace, error) {
-	dir = filepath.Join(parent.GetDir(), dir)
+func LoadWorkspace(parent *Archive, id string) (*Workspace, error) {
+	dir := filepath.Join(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}

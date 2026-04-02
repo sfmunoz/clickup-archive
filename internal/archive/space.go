@@ -14,8 +14,8 @@ type Space struct {
 	Children []*Folder
 }
 
-func LoadSpace(parent *Workspace, dir string) (*Space, error) {
-	dir = filepath.Join(parent.GetDir(), dir)
+func LoadSpace(parent *Workspace, id string) (*Space, error) {
+	dir := filepath.Join(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}

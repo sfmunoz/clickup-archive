@@ -14,8 +14,8 @@ type List struct {
 	Children []*Task
 }
 
-func LoadList(parent *Folder, dir string) (*List, error) {
-	dir = filepath.Join(parent.GetDir(), dir)
+func LoadList(parent *Folder, id string) (*List, error) {
+	dir := filepath.Join(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}

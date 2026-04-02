@@ -14,8 +14,8 @@ type Task struct {
 	Children []*Comment
 }
 
-func LoadTask(parent *List, dir string) (*Task, error) {
-	dir = filepath.Join(parent.GetDir(), dir)
+func LoadTask(parent *List, id string) (*Task, error) {
+	dir := filepath.Join(parent.GetDir(), id)
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
