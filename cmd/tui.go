@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/sfmunoz/clickup-archive/internal/archive"
 	"github.com/sfmunoz/clickup-archive/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -10,7 +11,11 @@ var tuiCmd = &cobra.Command{
 	Short: "Launch the terminal user interface",
 	Long:  `Launches an interactive TUI for browsing the local ClickUp archive.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t, err := tui.NewTui(clickupDir())
+		a, err := archive.NewArchive(clickupDir())
+		if err != nil {
+			return err
+		}
+		t, err := tui.NewTui(a)
 		if err != nil {
 			return err
 		}

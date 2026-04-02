@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sfmunoz/clickup-archive/internal/archive"
+
 	tea "charm.land/bubbletea/v2"
 )
 
@@ -16,8 +18,8 @@ type entry struct {
 }
 
 type Tui struct {
-	clickupDir string
-	tree       *Node
+	archive *archive.Archive
+	tree    *Node
 }
 
 func loadEntries(dir string) ([]entry, error) {
@@ -79,26 +81,19 @@ func (t *Tui) loadNodeChildren(n *Node) {
 	}
 }
 
-func buildRootNode(clickupDir string) (*Node, error) {
+func NewTui(a *archive.Archive) (*Tui, error) {
 	root := &Node{
 		Name:        "ClickUp Archive",
-		dir:         clickupDir,
-		childrenDir: clickupDir,
+		dir:         a.GetDir(),
+		childrenDir: a.GetDir(),
 		level:       -1,
 		Open:        true,
 		Cursor:      true,
 	}
-	t := &Tui{clickupDir: clickupDir, tree: root}
+	t := &Tui{archive: a, tree: root}
 	t.loadNodeChildren(root)
-	return root, nil
-}
 
-func NewTui(clickupDir string) (*Tui, error) {
-	root, err := buildRootNode(clickupDir)
-	if err != nil {
-		return nil, err
-	}
-	return &Tui{clickupDir: clickupDir, tree: root}, nil
+	return t, nil
 }
 
 func (t *Tui) Init() tea.Cmd {
