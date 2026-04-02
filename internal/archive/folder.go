@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
@@ -18,13 +19,21 @@ func NewFolder(parent *Space, dir string) (*Folder, error) {
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
+	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	if err != nil {
+		return nil, err
+	}
+	var data api.Folder
+	if err := json.Unmarshal(buf, &data); err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 	f := &Folder{
 		Parent:   parent,
-		Data:     api.Folder{},
+		Data:     data,
 		Children: make([]*List, 0),
 	}
 	for _, e := range entries {

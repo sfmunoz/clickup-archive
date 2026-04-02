@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
@@ -18,9 +19,17 @@ func NewTask(parent *List, dir string) (*Task, error) {
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
+	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	if err != nil {
+		return nil, err
+	}
+	var data api.Task
+	if err := json.Unmarshal(buf, &data); err != nil {
+		return nil, err
+	}
 	t := &Task{
 		Parent:   parent,
-		Data:     api.Task{},
+		Data:     data,
 		Children: make([]*Comment, 0),
 	}
 	commentsDir := filepath.Join(dir, "comments")

@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
@@ -18,13 +19,21 @@ func NewSpace(parent *Workspace, dir string) (*Space, error) {
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
+	buf, err := os.ReadFile(filepath.Join(dir, "index.json"))
+	if err != nil {
+		return nil, err
+	}
+	var data api.Space
+	if err := json.Unmarshal(buf, &data); err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 	s := &Space{
 		Parent:   parent,
-		Data:     api.Space{},
+		Data:     data,
 		Children: make([]*Folder, 0),
 	}
 	for _, e := range entries {
