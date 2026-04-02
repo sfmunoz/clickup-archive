@@ -10,7 +10,7 @@ import (
 
 type List struct {
 	Parent   *Folder
-	Data     api.List
+	Data     *api.List
 	Children []*Task
 }
 
@@ -33,7 +33,7 @@ func NewList(parent *Folder, dir string) (*List, error) {
 	}
 	l := &List{
 		Parent:   parent,
-		Data:     data,
+		Data:     &data,
 		Children: make([]*Task, 0),
 	}
 	for _, e := range entries {

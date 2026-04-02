@@ -10,7 +10,7 @@ import (
 
 type Workspace struct {
 	Parent   *Archive
-	Data     api.Workspace
+	Data     *api.Workspace
 	Children []*Space
 }
 
@@ -33,7 +33,7 @@ func NewWorkspace(parent *Archive, dir string) (*Workspace, error) {
 	}
 	w := &Workspace{
 		Parent:   parent,
-		Data:     data,
+		Data:     &data,
 		Children: make([]*Space, 0),
 	}
 	for _, e := range entries {

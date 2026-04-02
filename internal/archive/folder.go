@@ -10,7 +10,7 @@ import (
 
 type Folder struct {
 	Parent   *Space
-	Data     api.Folder
+	Data     *api.Folder
 	Children []*List
 }
 
@@ -33,7 +33,7 @@ func NewFolder(parent *Space, dir string) (*Folder, error) {
 	}
 	f := &Folder{
 		Parent:   parent,
-		Data:     data,
+		Data:     &data,
 		Children: make([]*List, 0),
 	}
 	for _, e := range entries {

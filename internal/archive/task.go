@@ -10,7 +10,7 @@ import (
 
 type Task struct {
 	Parent   *List
-	Data     api.Task
+	Data     *api.Task
 	Children []*Comment
 }
 
@@ -29,7 +29,7 @@ func NewTask(parent *List, dir string) (*Task, error) {
 	}
 	t := &Task{
 		Parent:   parent,
-		Data:     data,
+		Data:     &data,
 		Children: make([]*Comment, 0),
 	}
 	commentsDir := filepath.Join(dir, "comments")

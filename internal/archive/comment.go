@@ -10,7 +10,7 @@ import (
 
 type Comment struct {
 	Parent   *Task
-	Data     api.Comment
+	Data     *api.Comment
 	Children []*struct{}
 }
 
@@ -29,7 +29,7 @@ func NewComment(parent *Task, dir string) (*Comment, error) {
 	}
 	return &Comment{
 		Parent:   parent,
-		Data:     data,
+		Data:     &data,
 		Children: make([]*struct{}, 0),
 	}, nil
 }
