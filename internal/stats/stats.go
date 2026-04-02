@@ -18,14 +18,7 @@ func NewStats(a *archive.Archive) (*Stats, error) {
 }
 
 func (s *Stats) Run() error {
-	var (
-		wTot int
-		sTot int
-		fTot int
-		lTot int
-		tTot int
-		cTot int
-	)
+	var wTot, sTot, fTot, lTot, tTot, cTot = 0, 0, 0, 0, 0, 0
 	for i1, v1 := range s.archive.Children {
 		wTot++
 		log.Info("..", "i", i1+1, "t", wTot, "id", v1.Data.ID, "n", v1.Data.Name)
@@ -43,13 +36,7 @@ func (s *Stats) Run() error {
 						log.Info("..........", "i", i5+1, "t", tTot, "id", v5.Data.ID, "n", v5.Data.Name)
 						for i6, v6 := range v5.Children {
 							cTot++
-							log.Info("............", "i", i6+1, "t", cTot, "id", v6.Data.ID, "c", strings.ReplaceAll(
-								strings.TrimSpace(
-									v6.Data.Text[:min(60, len(v6.Data.Text))],
-								),
-								"\n",
-								" | ",
-							))
+							log.Info("............", "i", i6+1, "t", cTot, "id", v6.Data.ID, "c", commentTrim(v6.Data.Text))
 						}
 					}
 				}
@@ -63,4 +50,11 @@ func (s *Stats) Run() error {
 	log.Info("tasks", "tot", tTot)
 	log.Info("comments", "tot", cTot)
 	return nil
+}
+
+func commentTrim(s string) string {
+	if len(s) < 60 {
+		return s
+	}
+	return strings.ReplaceAll(strings.TrimSpace(s[:57]), "\n", " | ") + "..."
 }
