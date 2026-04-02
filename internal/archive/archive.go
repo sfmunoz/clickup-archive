@@ -3,15 +3,15 @@ package archive
 import (
 	"fmt"
 	"os"
-
-	"github.com/sfmunoz/logit"
 )
 
-var log = logit.Logit().WithLevel(logit.LevelInfo)
+type ArchiveData struct {
+	Dir string
+}
 
 type Archive struct {
 	Parent   *struct{}
-	Data     string
+	Data     *ArchiveData
 	Children []*Workspace
 }
 
@@ -25,7 +25,7 @@ func NewArchive(dir string) (*Archive, error) {
 	}
 	a := &Archive{
 		Parent:   nil,
-		Data:     dir,
+		Data:     &ArchiveData{Dir: dir},
 		Children: make([]*Workspace, 0),
 	}
 	for _, e := range entries {
@@ -42,7 +42,7 @@ func NewArchive(dir string) (*Archive, error) {
 }
 
 func (a *Archive) GetDir() string {
-	return a.Data
+	return a.Data.Dir
 }
 
 func isFolder(dir string) error {
