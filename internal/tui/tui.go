@@ -7,16 +7,6 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-type Tui struct {
-	archive *archive.Archive
-	width   int
-	height  int
-}
-
-func NewTui(a *archive.Archive) (*Tui, error) {
-	return &Tui{archive: a}, nil
-}
-
 var (
 	topbarStyle = lipgloss.NewStyle().
 			Bold(true).
@@ -37,22 +27,50 @@ var (
 			PaddingLeft(1)
 )
 
+type Tui struct {
+	archive *archive.Archive
+	stats   *Stats
+	width   int
+	height  int
+}
+
+func NewTui(a *archive.Archive) (*Tui, error) {
+	stats, err := NewStats(a)
+	if err != nil {
+		return nil, err
+	}
+	return &Tui{
+		archive: a,
+		stats:   stats,
+		width:   0,
+		height:  0,
+	}, nil
+}
+
 func (t *Tui) Init() tea.Cmd {
 	return nil
 }
 
 func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		t.width = msg.Width
 		t.height = msg.Height
+		var cmd tea.Cmd
+		t.stats, cmd = t.stats.Update(msg)
+		cmds = append(cmds, cmd)
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return t, tea.Quit
+		case "s":
+			var cmd tea.Cmd
+			t.stats, cmd = t.stats.Update(StatsVisibleToggleMsg{})
+			cmds = append(cmds, cmd)
 		}
 	}
-	return t, nil
+	return t, tea.Batch(cmds...)
 }
 
 func (t *Tui) View() tea.View {
@@ -75,11 +93,11 @@ func (t *Tui) View() tea.View {
 	content := contentStyle.
 		Width(contentW - lipgloss.Width(sidebarStyle.Render(""))). // subtract border
 		Height(bodyH).
-		Render("Select a list to browse tasks.")
+		Render("Select a list to browse tasks\n\n" + t.stats.View())
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
-		Render("q/ctrl-c: quit")
+		Render("q/ctrl-c: quit ; s: show/hide stats")
 	body := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
 	screen := lipgloss.JoinVertical(lipgloss.Top, topbar, body, statusbar)
 	var v tea.View
