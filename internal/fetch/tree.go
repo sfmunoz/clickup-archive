@@ -9,23 +9,25 @@ import (
 
 type FetchTree struct {
 	archive *archive.Archive
+	update  bool
 	client  *Client
 }
 
-func NewFetchTree(a *archive.Archive) (*FetchTree, error) {
+func NewFetchTree(a *archive.Archive, update bool) (*FetchTree, error) {
 	client, err := NewClient()
 	if err != nil {
 		return nil, err
 	}
 	return &FetchTree{
 		archive: a,
+		update:  update,
 		client:  client,
 	}, nil
 }
 
 func (f *FetchTree) dumpTask(task api.Task, archLi *archive.List) error {
 	log.Info("Task", "id", task.ID, "name", task.Name)
-	if _, err := archLi.SaveTask(&task, false); err != nil {
+	if _, err := archLi.SaveTask(&task, f.update); err != nil {
 		return fmt.Errorf("dump task %s: %w", task.ID, err)
 	}
 	for _, sub := range task.Subtasks {
@@ -62,7 +64,7 @@ func (f *FetchTree) getLists(folderID string, archFo *archive.Folder) error {
 	}
 	for _, list := range resp.Lists {
 		log.Info("List", "id", list.ID, "name", list.Name)
-		archLi, err := archFo.SaveList(&list, false)
+		archLi, err := archFo.SaveList(&list, f.update)
 		if err != nil {
 			return err
 		}
@@ -80,7 +82,7 @@ func (f *FetchTree) getFolders(spaceID string, archSp *archive.Space) error {
 	}
 	for _, folder := range resp.Folders {
 		log.Info("Folder", "id", folder.ID, "name", folder.Name)
-		archFo, err := archSp.SaveFolder(&folder, false)
+		archFo, err := archSp.SaveFolder(&folder, f.update)
 		if err != nil {
 			return err
 		}
@@ -98,7 +100,7 @@ func (f *FetchTree) getSpaces(workspaceID string, archWs *archive.Workspace) err
 	}
 	for _, space := range resp.Spaces {
 		log.Info("Space", "id", space.ID, "name", space.Name)
-		archSp, err := archWs.SaveSpace(&space, false)
+		archSp, err := archWs.SaveSpace(&space, f.update)
 		if err != nil {
 			return err
 		}
@@ -116,7 +118,7 @@ func (f *FetchTree) Run() error {
 	}
 	for _, workspace := range resp.Workspaces {
 		log.Info("Workspace", "id", workspace.ID, "name", workspace.Name)
-		archWs, err := f.archive.SaveWorkspace(&workspace, false)
+		archWs, err := f.archive.SaveWorkspace(&workspace, f.update)
 		if err != nil {
 			return err
 		}

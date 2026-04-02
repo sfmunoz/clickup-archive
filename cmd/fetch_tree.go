@@ -23,7 +23,7 @@ Requires the CLICKUP_TOKEN environment variable (personal API token).`,
 		if err != nil {
 			return err
 		}
-		f, err := fetch.NewFetchTree(a)
+		f, err := fetch.NewFetchTree(a, true)
 		if err != nil {
 			return err
 		}
