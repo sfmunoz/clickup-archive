@@ -1,0 +1,20 @@
+package archive
+
+import (
+	"fmt"
+
+	"github.com/sfmunoz/logit"
+)
+
+var log = logit.Logit().WithLevel(logit.LevelInfo)
+
+type Archive struct {
+	Parent   *struct{}
+	Data     string
+	Children []*Workspace
+}
+
+func Load(dir string) (*Archive, error) {
+	log.Fatal("not implemented")
+	return nil, fmt.Errorf("not implemented")
+}
