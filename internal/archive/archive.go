@@ -18,3 +18,7 @@ func NewArchive(dir string) (*Archive, error) {
 	log.Fatal("not implemented")
 	return nil, fmt.Errorf("not implemented")
 }
+
+func (a *Archive) GetDir() string {
+	return a.Data
+}
