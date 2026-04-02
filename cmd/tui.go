@@ -11,7 +11,7 @@ var tuiCmd = &cobra.Command{
 	Short: "Launch the terminal user interface",
 	Long:  `Launches an interactive TUI for browsing the local ClickUp archive.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		a, err := archive.NewArchive(clickupDir())
+		a, err := archive.LoadArchive(clickupDir())
 		if err != nil {
 			return err
 		}

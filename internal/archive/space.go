@@ -14,7 +14,7 @@ type Space struct {
 	Children []*Folder
 }
 
-func NewSpace(parent *Workspace, dir string) (*Space, error) {
+func LoadSpace(parent *Workspace, dir string) (*Space, error) {
 	dir = filepath.Join(parent.GetDir(), dir)
 	if err := isFolder(dir); err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func NewSpace(parent *Workspace, dir string) (*Space, error) {
 		if !e.IsDir() {
 			continue
 		}
-		f, err := NewFolder(s, e.Name())
+		f, err := LoadFolder(s, e.Name())
 		if err != nil {
 			return nil, err
 		}

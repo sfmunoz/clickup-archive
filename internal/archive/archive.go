@@ -15,7 +15,7 @@ type Archive struct {
 	Children []*Workspace
 }
 
-func NewArchive(dir string) (*Archive, error) {
+func LoadArchive(dir string) (*Archive, error) {
 	if err := isFolder(dir); err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func NewArchive(dir string) (*Archive, error) {
 		if !e.IsDir() {
 			continue
 		}
-		w, err := NewWorkspace(a, e.Name())
+		w, err := LoadWorkspace(a, e.Name())
 		if err != nil {
 			return nil, err
 		}

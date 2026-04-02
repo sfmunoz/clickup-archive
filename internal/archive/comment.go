@@ -14,7 +14,7 @@ type Comment struct {
 	Children []*struct{}
 }
 
-func NewComment(parent *Task, dir string) (*Comment, error) {
+func LoadComment(parent *Task, dir string) (*Comment, error) {
 	dir = filepath.Join(parent.GetDir(), "comments", dir)
 	if err := isFolder(dir); err != nil {
 		return nil, err

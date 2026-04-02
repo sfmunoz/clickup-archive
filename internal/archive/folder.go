@@ -14,7 +14,7 @@ type Folder struct {
 	Children []*List
 }
 
-func NewFolder(parent *Space, dir string) (*Folder, error) {
+func LoadFolder(parent *Space, dir string) (*Folder, error) {
 	dir = filepath.Join(parent.GetDir(), dir)
 	if err := isFolder(dir); err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func NewFolder(parent *Space, dir string) (*Folder, error) {
 		if !e.IsDir() {
 			continue
 		}
-		l, err := NewList(f, e.Name())
+		l, err := LoadList(f, e.Name())
 		if err != nil {
 			return nil, err
 		}

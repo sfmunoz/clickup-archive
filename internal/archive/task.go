@@ -14,7 +14,7 @@ type Task struct {
 	Children []*Comment
 }
 
-func NewTask(parent *List, dir string) (*Task, error) {
+func LoadTask(parent *List, dir string) (*Task, error) {
 	dir = filepath.Join(parent.GetDir(), dir)
 	if err := isFolder(dir); err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func NewTask(parent *List, dir string) (*Task, error) {
 		if !e.IsDir() {
 			continue
 		}
-		c, err := NewComment(t, e.Name())
+		c, err := LoadComment(t, e.Name())
 		if err != nil {
 			return nil, err
 		}
