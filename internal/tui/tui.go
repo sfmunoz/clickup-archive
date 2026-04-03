@@ -91,8 +91,6 @@ func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case itemDelegateMsg:
-		return t, nil
 	case tea.WindowSizeMsg:
 		return t.updateWindowSize(msg)
 	case tea.KeyPressMsg:
