@@ -9,9 +9,10 @@ import (
 )
 
 type Task struct {
-	Parent   *List
-	Data     *api.Task
-	Children []*Comment
+	Parent      *List
+	Data        *api.Task
+	Children    []*Comment
+	Attachments []*Attachment
 }
 
 func (t *Task) GetDir() string {
@@ -19,12 +20,26 @@ func (t *Task) GetDir() string {
 }
 
 func (t *Task) IsCommentsDone() bool {
-	_, err := os.Stat(doneFile(t.GetDir()))
+	_, err := os.Stat(commentsDoneFile(t.GetDir()))
 	return err == nil
 }
 
 func (t *Task) MarkCommentsDone() error {
-	return os.WriteFile(doneFile(t.GetDir()), []byte{}, 0o644)
+	return os.WriteFile(commentsDoneFile(t.GetDir()), []byte{}, 0o644)
+}
+
+func (t *Task) IsAttachmentsDone() bool {
+	_, err := os.Stat(attachmentsDoneFile(t.GetDir()))
+	return err == nil
+}
+
+func (t *Task) MarkAttachmentsDone() error {
+	return os.WriteFile(attachmentsDoneFile(t.GetDir()), []byte{}, 0o644)
+}
+
+func (t *Task) ClearAttachments() error {
+	t.Attachments = make([]*Attachment, 0)
+	return os.RemoveAll(attachmentsDir(t.GetDir()))
 }
 
 func (t *Task) ClearComments() error {
@@ -46,9 +61,10 @@ func LoadTask(parent *List, id string) (*Task, error) {
 		return nil, err
 	}
 	t := &Task{
-		Parent:   parent,
-		Data:     &data,
-		Children: make([]*Comment, 0),
+		Parent:      parent,
+		Data:        &data,
+		Children:    make([]*Comment, 0),
+		Attachments: make([]*Attachment, 0),
 	}
 	entries, err := os.ReadDir(commentsDir(dir))
 	if err != nil {
@@ -66,6 +82,23 @@ func LoadTask(parent *List, id string) (*Task, error) {
 			return nil, err
 		}
 		t.Children = append(t.Children, c)
+	}
+	attEntries, err := os.ReadDir(attachmentsDir(dir))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return t, nil
+		}
+		return nil, err
+	}
+	for _, e := range attEntries {
+		if !e.IsDir() {
+			continue
+		}
+		a, err := LoadAttachment(t, e.Name())
+		if err != nil {
+			return nil, err
+		}
+		t.Attachments = append(t.Attachments, a)
 	}
 	return t, nil
 }
@@ -88,7 +121,7 @@ func SaveTask(parent *List, t *api.Task, update bool) (*Task, error) {
 	}
 	if tOld == nil {
 		log.Info("task created", "id", t.ID, "name", t.Name)
-		tNew := &Task{Parent: parent, Data: t, Children: make([]*Comment, 0)}
+		tNew := &Task{Parent: parent, Data: t, Children: make([]*Comment, 0), Attachments: make([]*Attachment, 0)}
 		parent.Children = append(parent.Children, tNew)
 		return tNew, nil
 	}

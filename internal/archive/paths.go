@@ -34,6 +34,18 @@ func indexFile(dir string) string {
 	return filepath.Join(dir, "index.json")
 }
 
-func doneFile(taskDir string) string {
+func commentsDoneFile(taskDir string) string {
 	return filepath.Join(taskDir, "comments.done")
+}
+
+func attachmentsDoneFile(taskDir string) string {
+	return filepath.Join(taskDir, "attachments.done")
+}
+
+func attachmentsDir(taskDir string) string {
+	return filepath.Join(taskDir, "attachments")
+}
+
+func attachmentDir(taskDir, id string) string {
+	return filepath.Join(attachmentsDir(taskDir), id)
 }

@@ -53,6 +53,45 @@ func (c *Client) httpGetOnce(path string, out any) error {
 	return json.Unmarshal(body, out)
 }
 
+func (c *Client) httpGetBytesOnce(url string) ([]byte, error) {
+	time.Sleep(650 * time.Millisecond)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", c.token)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
+	}
+	return body, nil
+}
+
+func (c *Client) HttpGetBytes(url string) ([]byte, error) {
+	var data []byte
+	for attempt := 1; attempt <= httpGetRetries; attempt++ {
+		var err error
+		data, err = c.httpGetBytesOnce(url)
+		if err == nil {
+			break
+		}
+		if attempt == httpGetRetries {
+			return nil, err
+		}
+		log.Warn("httpGetBytes failed, retrying", "attempt", attempt, "err", err)
+		time.Sleep(httpGetRetryDelay)
+	}
+	return data, nil
+}
+
 func (c *Client) HttpGet(path string, out any) error {
 	for attempt := 1; attempt <= httpGetRetries; attempt++ {
 		err := c.httpGetOnce(path, out)
