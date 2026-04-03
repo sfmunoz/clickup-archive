@@ -44,7 +44,9 @@ func NewItems(a *archive.Archive) (*Items, error) {
 			}
 		}
 	}
-	list := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	delegate := list.NewDefaultDelegate()
+	delegate.SetSpacing(0)
+	list := list.New(items, delegate, 0, 0)
 	list.Title = "Item list"
 	return &Items{
 		archive: a,
