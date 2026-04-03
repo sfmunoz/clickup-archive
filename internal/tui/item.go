@@ -11,12 +11,14 @@ package tui
 // }
 
 type item struct {
+	node        any
 	title, desc string
 	pos, level  int
 }
 
-func newItem(title, desc string, pos, level int) *item {
+func newItem(node any, title, desc string, pos, level int) *item {
 	return &item{
+		node:  node,
 		title: title,
 		desc:  desc,
 		pos:   pos,

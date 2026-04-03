@@ -19,17 +19,17 @@ type Items struct {
 func NewItems(a *archive.Archive) (*Items, error) {
 	items := make([]list.Item, 0)
 	for i1, v1 := range a.Children {
-		items = append(items, newItem(v1.Data.ID, v1.Data.Name, i1, 0))
+		items = append(items, newItem(v1, v1.Data.ID, v1.Data.Name, i1, 0))
 		for i2, v2 := range v1.Children {
-			items = append(items, newItem(v2.Data.ID, v2.Data.Name, i2, 1))
+			items = append(items, newItem(v2, v2.Data.ID, v2.Data.Name, i2, 1))
 			for i3, v3 := range v2.Children {
-				items = append(items, newItem(v3.Data.ID, v3.Data.Name, i3, 2))
+				items = append(items, newItem(v3, v3.Data.ID, v3.Data.Name, i3, 2))
 				for i4, v4 := range v3.Children {
-					items = append(items, newItem(v4.Data.ID, v4.Data.Name, i4, 3))
+					items = append(items, newItem(v4, v4.Data.ID, v4.Data.Name, i4, 3))
 					for i5, v5 := range v4.Children {
-						items = append(items, newItem(v5.Data.ID, v5.Data.Name, i5, 4))
+						items = append(items, newItem(v5, v5.Data.ID, v5.Data.Name, i5, 4))
 						for i6, v6 := range v5.Children {
-							items = append(items, newItem(v6.Data.ID, v6.Data.Text, i6, 5))
+							items = append(items, newItem(v6, v6.Data.ID, v6.Data.Text, i6, 5))
 						}
 					}
 				}
@@ -65,6 +65,14 @@ func (i *Items) Update(msg tea.Msg) (*Items, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 	return i, tea.Batch(cmds...)
+}
+
+func (i *Items) SelectedNode() any {
+	selected := i.list.SelectedItem()
+	if it, ok := selected.(*item); ok {
+		return it.node
+	}
+	return nil
 }
 
 func (i *Items) View() string {
