@@ -57,31 +57,40 @@ func (t *Tui) Init() tea.Cmd {
 	return nil
 }
 
-func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (t *Tui) updateWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	t.width = msg.Width
+	t.height = msg.Height
+	var cmd1, cmd2 tea.Cmd
+	t.items, cmd1 = t.items.Update(msg)
+	t.stats, cmd2 = t.stats.Update(msg)
+	return t, tea.Batch(cmd1, cmd2)
+}
+
+func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		t.width = msg.Width
-		t.height = msg.Height
-		var cmd1, cmd2 tea.Cmd
-		t.items, cmd1 = t.items.Update(msg)
-		t.stats, cmd2 = t.stats.Update(msg)
-		cmds = append(cmds, cmd1, cmd2)
-	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return t, tea.Quit
-		case "s":
-			var cmd tea.Cmd
-			t.stats, cmd = t.stats.Update(StatsVisibleToggleMsg{})
-			cmds = append(cmds, cmd)
-		default:
-			var cmd tea.Cmd
-			t.items, cmd = t.items.Update(msg)
-			cmds = append(cmds, cmd)
-		}
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return t, tea.Quit
+	case "s":
+		var cmd tea.Cmd
+		t.stats, cmd = t.stats.Update(StatsVisibleToggleMsg{})
+		cmds = append(cmds, cmd)
+	default:
+		var cmd tea.Cmd
+		t.items, cmd = t.items.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 	return t, tea.Batch(cmds...)
+}
+
+func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		return t.updateWindowSize(msg)
+	case tea.KeyPressMsg:
+		return t.updateKeyPress(msg)
+	}
+	return t, nil
 }
 
 func (t *Tui) View() tea.View {
