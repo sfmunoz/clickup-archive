@@ -57,12 +57,12 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	if !ok {
 		return
 	}
-	n := i.Level() % d.totStyles
+	n := i.GetLevel() % d.totStyles
 	pref := ""
 	s := d.itemStyle[n]
 	if index == m.Index() {
 		pref = "> "
 		s = d.selItemStyle[n]
 	}
-	fmt.Fprint(w, s.Render(fmt.Sprintf("%s%3d. %s", pref, index+1, i.title)))
+	fmt.Fprint(w, s.Render(fmt.Sprintf("%s %2d. %s (%d)", pref, i.GetPos()+1, i.Title(), index+1)))
 }
