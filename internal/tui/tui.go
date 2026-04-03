@@ -31,6 +31,7 @@ type Tui struct {
 	archive       *archive.Archive
 	items         *Items
 	stats         *Stats
+	statsVisible  bool
 	width, height int
 }
 
@@ -71,9 +72,7 @@ func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c", "q":
 		return t, tea.Quit
 	case "s":
-		var cmd tea.Cmd
-		t.stats, cmd = t.stats.Update(StatsVisibleToggleMsg{})
-		cmds = append(cmds, cmd)
+		t.statsVisible = !t.statsVisible
 	default:
 		var cmd tea.Cmd
 		t.items, cmd = t.items.Update(msg)
@@ -113,7 +112,7 @@ func (t *Tui) View() tea.View {
 		Render(t.items.View())
 	contentInnerW := contentW - sidebarStyle.GetHorizontalFrameSize()
 	node := t.items.SelectedNode()
-	content := contentStyle.
+	contentPanel := contentStyle.
 		Width(contentInnerW).
 		Height(bodyH).
 		Render(renderContent(node, contentInnerW, bodyH))
@@ -121,21 +120,27 @@ func (t *Tui) View() tea.View {
 		Width(t.width).
 		Height(statusbarH).
 		Render("q/ctrl-c: quit ; s: show/hide stats")
-	screen := lipgloss.JoinVertical(
+	mainScreen := lipgloss.JoinVertical(
 		lipgloss.Top,
 		topbar,
-		lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content),
+		lipgloss.JoinHorizontal(lipgloss.Top, sidebar, contentPanel),
 		statusbar,
 	)
-	statsView := t.stats.View()
-	statsW, statsH := lipgloss.Size(statsView)
-	comp := lipgloss.NewCompositor(
-		lipgloss.NewLayer(screen).X(0).Y(0).Z(0),
-		lipgloss.NewLayer(statsView).X((t.width-statsW)/2).Y((t.height-statsH)/2).Z(10),
-	)
+	var content string
+	if t.statsVisible {
+		statsView := t.stats.View()
+		statsW, statsH := lipgloss.Size(statsView)
+		comp := lipgloss.NewCompositor(
+			lipgloss.NewLayer(mainScreen).X(0).Y(0).Z(0),
+			lipgloss.NewLayer(statsView).X((t.width-statsW)/2).Y((t.height-statsH)/2).Z(10),
+		)
+		content = comp.Render()
+	} else {
+		content = mainScreen
+	}
 	var v tea.View
 	v.AltScreen = true
-	v.SetContent(comp.Render())
+	v.SetContent(content)
 	return v
 }
 

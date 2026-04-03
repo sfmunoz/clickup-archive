@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/sfmunoz/clickup-archive/internal/archive"
 )
@@ -18,30 +17,15 @@ var statsTitleStyle = lipgloss.NewStyle().Bold(true).Underline(true)
 
 type Stats struct {
 	archive *archive.Archive
-	visible bool
 }
-
-type StatsVisibleToggleMsg struct{}
 
 func NewStats(a *archive.Archive) (*Stats, error) {
 	return &Stats{
 		archive: a,
-		visible: false,
 	}, nil
 }
 
-func (s *Stats) Update(msg tea.Msg) (*Stats, tea.Cmd) {
-	switch msg.(type) {
-	case StatsVisibleToggleMsg:
-		s.visible = !s.visible
-	}
-	return s, nil
-}
-
 func (s *Stats) View() string {
-	if !s.visible {
-		return ""
-	}
 	var wTot, sTot, fTot, lTot, tTot, cTot = 0, 0, 0, 0, 0, 0
 	for _, v1 := range s.archive.Children {
 		wTot++
