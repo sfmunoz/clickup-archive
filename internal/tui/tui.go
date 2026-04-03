@@ -69,14 +69,22 @@ func (t *Tui) updateWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "ctrl+c":
 		return t, tea.Quit
-	case "s":
+	case "q":
+		if t.statsVisible {
+			t.statsVisible = !t.statsVisible
+		} else {
+			return t, tea.Quit
+		}
+	case "f1":
 		t.statsVisible = !t.statsVisible
 	default:
-		var cmd tea.Cmd
-		t.items, cmd = t.items.Update(msg)
-		cmds = append(cmds, cmd)
+		if !t.statsVisible {
+			var cmd tea.Cmd
+			t.items, cmd = t.items.Update(msg)
+			return t, cmd
+		}
 	}
 	return t, tea.Batch(cmds...)
 }
@@ -119,7 +127,7 @@ func (t *Tui) View() tea.View {
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
-		Render("q/ctrl-c: quit ; s: show/hide stats")
+		Render("q/ctrl-c: quit ; F1: show/hide stats")
 	mainScreen := lipgloss.JoinVertical(
 		lipgloss.Top,
 		topbar,
