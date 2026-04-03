@@ -10,8 +10,6 @@ import (
 
 type Stats struct {
 	archive *archive.Archive
-	width   int
-	height  int
 	visible bool
 }
 
@@ -20,17 +18,12 @@ type StatsVisibleToggleMsg struct{}
 func NewStats(a *archive.Archive) (*Stats, error) {
 	return &Stats{
 		archive: a,
-		width:   0,
-		height:  0,
 		visible: false,
 	}, nil
 }
 
 func (s *Stats) Update(msg tea.Msg) (*Stats, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		s.width = msg.Width
-		s.height = msg.Height
+	switch msg.(type) {
 	case StatsVisibleToggleMsg:
 		s.visible = !s.visible
 	}
@@ -38,7 +31,7 @@ func (s *Stats) Update(msg tea.Msg) (*Stats, tea.Cmd) {
 }
 
 func (s *Stats) View() string {
-	if s.width == 0 || !s.visible {
+	if !s.visible {
 		return ""
 	}
 	var wTot, sTot, fTot, lTot, tTot, cTot = 0, 0, 0, 0, 0, 0

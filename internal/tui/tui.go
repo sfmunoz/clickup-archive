@@ -62,9 +62,7 @@ func (t *Tui) updateWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	sidebarW := 40
 	bodyH := t.height - topbarH - statusbarH
 	t.items.SetSize(sidebarW, bodyH)
-	var cmd tea.Cmd
-	t.stats, cmd = t.stats.Update(msg)
-	return t, cmd
+	return t, nil
 }
 
 func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
