@@ -90,7 +90,7 @@ func (t *Tui) View() tea.View {
 	}
 	topbarH := 1
 	statusbarH := 1
-	sidebarW := 25
+	sidebarW := 40
 	contentW := t.width - sidebarW
 	bodyH := t.height - topbarH - statusbarH
 	topbar := topbarStyle.
@@ -100,11 +100,11 @@ func (t *Tui) View() tea.View {
 	sidebar := sidebarStyle.
 		Width(sidebarW).
 		Height(bodyH).
-		Render("Workspace\n  Space A\n  Space B\n    Folder 1\n    Folder 2\n    Folder 3")
+		Render(t.items.View())
 	content := contentStyle.
-		Width(contentW - lipgloss.Width(sidebarStyle.Render(""))). // subtract border
+		Width(contentW - sidebarStyle.GetHorizontalFrameSize()).
 		Height(bodyH).
-		Render("Select a list to browse tasks\n\n" + t.stats.View() + "\n\n" + t.items.View())
+		Render("Select a list to browse tasks\n\n" + t.stats.View())
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
