@@ -14,14 +14,29 @@ import (
 // https://pkg.go.dev/github.com/charmbracelet/bubbles/list#ItemDelegate
 
 type itemDelegate struct {
-	itemStyle    lipgloss.Style
-	selItemStyle lipgloss.Style
+	totStyles    int
+	itemStyle    [6]lipgloss.Style
+	selItemStyle [6]lipgloss.Style
 }
 
 func newItemDelegate() *itemDelegate {
+	itemStyle := [6]lipgloss.Style{
+		lipgloss.NewStyle().Foreground(lipgloss.Color("1")),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("4")),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
+		lipgloss.NewStyle().Foreground(lipgloss.Color("7")),
+	}
+	selItemStyle := [6]lipgloss.Style{}
+	for i, v := range itemStyle {
+		selItemStyle[i] = v.Bold(true)
+		itemStyle[i] = v.PaddingLeft(2)
+	}
 	return &itemDelegate{
-		itemStyle:    lipgloss.NewStyle().PaddingLeft(2),
-		selItemStyle: lipgloss.NewStyle().PaddingLeft(0).Foreground(lipgloss.Color("6")),
+		totStyles:    len(itemStyle),
+		itemStyle:    itemStyle,
+		selItemStyle: selItemStyle,
 	}
 }
 
@@ -42,11 +57,12 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	if !ok {
 		return
 	}
+	n := i.Level() % d.totStyles
 	pref := ""
-	fn := d.itemStyle.Render
+	s := d.itemStyle[n]
 	if index == m.Index() {
 		pref = "> "
-		fn = d.selItemStyle.Render
+		s = d.selItemStyle[n]
 	}
-	fmt.Fprint(w, fn(fmt.Sprintf("%s%3d. %s", pref, index+1, i.title)))
+	fmt.Fprint(w, s.Render(fmt.Sprintf("%s%3d. %s", pref, index+1, i.title)))
 }

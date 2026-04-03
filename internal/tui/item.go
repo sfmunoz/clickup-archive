@@ -12,12 +12,14 @@ package tui
 
 type item struct {
 	title, desc string
+	level       int
 }
 
-func newItem(title, desc string) *item {
+func newItem(title, desc string, level int) *item {
 	return &item{
 		title: title,
 		desc:  desc,
+		level: level,
 	}
 }
 
@@ -31,4 +33,8 @@ func (i *item) Description() string {
 
 func (i *item) FilterValue() string {
 	return i.title
+}
+
+func (i *item) Level() int {
+	return i.level
 }
