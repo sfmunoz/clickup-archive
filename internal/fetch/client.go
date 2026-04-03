@@ -31,28 +31,6 @@ func NewClient() (*Client, error) {
 	return &Client{token: token}, nil
 }
 
-func (c *Client) httpGetOnce(path string, out any) error {
-	time.Sleep(650 * time.Millisecond) // limit = 100 request/minute → 0.6 sec/request
-	req, err := http.NewRequest("GET", baseURL+path, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", c.token)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
-	}
-	return json.Unmarshal(body, out)
-}
-
 func (c *Client) httpGetBytesOnce(url string) ([]byte, error) {
 	time.Sleep(650 * time.Millisecond)
 	req, err := http.NewRequest("GET", url, nil)
@@ -93,16 +71,9 @@ func (c *Client) HttpGetBytes(url string) ([]byte, error) {
 }
 
 func (c *Client) HttpGet(path string, out any) error {
-	for attempt := 1; attempt <= httpGetRetries; attempt++ {
-		err := c.httpGetOnce(path, out)
-		if err == nil {
-			break
-		}
-		if attempt == httpGetRetries {
-			return err
-		}
-		log.Warn("httpGet failed, retrying", "attempt", attempt, "err", err)
-		time.Sleep(httpGetRetryDelay)
+	body, err := c.HttpGetBytes(baseURL + path)
+	if err != nil {
+		return err
 	}
-	return nil
+	return json.Unmarshal(body, out)
 }
