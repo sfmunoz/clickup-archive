@@ -7,7 +7,7 @@ import (
 	"github.com/sfmunoz/clickup-archive/internal/archive"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var itemsStyle = lipgloss.NewStyle().Margin(1, 2)
 
 type Items struct {
 	archive *archive.Archive
@@ -51,8 +51,8 @@ func NewItems(a *archive.Archive) (*Items, error) {
 func (i *Items) SetSize(w, h int) {
 	i.width = w
 	i.height = h
-	i.list.SetWidth(w - docStyle.GetHorizontalFrameSize())
-	i.list.SetHeight(h - docStyle.GetVerticalFrameSize())
+	i.list.SetWidth(w - itemsStyle.GetHorizontalFrameSize())
+	i.list.SetHeight(h - itemsStyle.GetVerticalFrameSize())
 }
 
 func (i *Items) Update(msg tea.Msg) (*Items, tea.Cmd) {
@@ -78,5 +78,5 @@ func (i *Items) View() string {
 	if i.width == 0 {
 		return ""
 	}
-	return docStyle.Render(i.list.View())
+	return itemsStyle.Render(i.list.View())
 }
