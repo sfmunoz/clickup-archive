@@ -57,10 +57,14 @@ func (t *Tui) Init() tea.Cmd {
 func (t *Tui) updateWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	t.width = msg.Width
 	t.height = msg.Height
-	var cmd1, cmd2 tea.Cmd
-	t.items, cmd1 = t.items.Update(msg)
-	t.stats, cmd2 = t.stats.Update(msg)
-	return t, tea.Batch(cmd1, cmd2)
+	topbarH := 1
+	statusbarH := 1
+	sidebarW := 40
+	bodyH := t.height - topbarH - statusbarH
+	t.items.SetSize(sidebarW, bodyH)
+	var cmd tea.Cmd
+	t.stats, cmd = t.stats.Update(msg)
+	return t, cmd
 }
 
 func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -125,9 +129,11 @@ func (t *Tui) View() tea.View {
 		lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content),
 		statusbar,
 	)
+	statsView := t.stats.View()
+	statsW, statsH := lipgloss.Size(statsView)
 	comp := lipgloss.NewCompositor(
 		lipgloss.NewLayer(screen).X(0).Y(0).Z(0),
-		lipgloss.NewLayer(t.stats.View()).X(t.width/2-10).Y(t.height/2-5).Z(10), // FIXME hardcoded -10,-5 values
+		lipgloss.NewLayer(statsView).X((t.width-statsW)/2).Y((t.height-statsH)/2).Z(10),
 	)
 	var v tea.View
 	v.AltScreen = true

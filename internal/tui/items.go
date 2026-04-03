@@ -48,17 +48,16 @@ func NewItems(a *archive.Archive) (*Items, error) {
 	}, nil
 }
 
+func (i *Items) SetSize(w, h int) {
+	i.width = w
+	i.height = h
+	i.list.SetWidth(w - docStyle.GetHorizontalFrameSize())
+	i.list.SetHeight(h - docStyle.GetVerticalFrameSize())
+}
+
 func (i *Items) Update(msg tea.Msg) (*Items, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		i.width = msg.Width
-		i.height = msg.Height
-		i.list.SetWidth(i.width - 20)   // FIXME
-		i.list.SetHeight(i.height - 10) // FIXME
-		var cmd tea.Cmd
-		i.list, cmd = i.list.Update(msg)
-		cmds = append(cmds, cmd)
 	case tea.KeyPressMsg:
 		var cmd tea.Cmd
 		i.list, cmd = i.list.Update(msg)
