@@ -109,10 +109,14 @@ func (t *Tui) View() tea.View {
 		Width(t.width).
 		Height(statusbarH).
 		Render("q/ctrl-c: quit ; s: show/hide stats")
-	body := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
-	screen := lipgloss.JoinVertical(lipgloss.Top, topbar, body, statusbar)
+	screen := lipgloss.JoinVertical(
+		lipgloss.Top,
+		topbar,
+		lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content),
+		statusbar,
+	)
 	comp := lipgloss.NewCompositor(
-		lipgloss.NewLayer(screen).X(0).Y(0),
+		lipgloss.NewLayer(screen).X(0).Y(0).Z(0),
 		lipgloss.NewLayer(t.stats.View()).X(t.width/2-10).Y(t.height/2-5).Z(10), // FIXME hardcoded -10,-5 values
 	)
 	var v tea.View
