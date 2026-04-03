@@ -38,11 +38,8 @@ func (s *Stats) Update(msg tea.Msg) (*Stats, tea.Cmd) {
 }
 
 func (s *Stats) View() string {
-	if s.width == 0 {
+	if s.width == 0 || !s.visible {
 		return ""
-	}
-	if !s.visible {
-		return "<stats hidden>"
 	}
 	var wTot, sTot, fTot, lTot, tTot, cTot = 0, 0, 0, 0, 0, 0
 	for _, v1 := range s.archive.Children {
