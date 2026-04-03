@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+
 	"github.com/sfmunoz/clickup-archive/internal/archive"
 
 	tea "charm.land/bubbletea/v2"
@@ -28,11 +30,10 @@ var (
 )
 
 type Tui struct {
-	archive *archive.Archive
-	items   *Items
-	stats   *Stats
-	width   int
-	height  int
+	archive              *archive.Archive
+	items                *Items
+	stats                *Stats
+	width, height, index int
 }
 
 func NewTui(a *archive.Archive) (*Tui, error) {
@@ -50,6 +51,7 @@ func NewTui(a *archive.Archive) (*Tui, error) {
 		stats:   stats,
 		width:   0,
 		height:  0,
+		index:   0,
 	}, nil
 }
 
@@ -85,6 +87,9 @@ func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case itemDelegateMsg:
+		t.index = msg.index
+		return t, nil
 	case tea.WindowSizeMsg:
 		return t.updateWindowSize(msg)
 	case tea.KeyPressMsg:
@@ -113,7 +118,7 @@ func (t *Tui) View() tea.View {
 	content := contentStyle.
 		Width(contentW - sidebarStyle.GetHorizontalFrameSize()).
 		Height(bodyH).
-		Render("Select a list to browse tasks")
+		Render(fmt.Sprintf("Select a list to browse tasks\n\nindex: %d", t.index+1))
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).

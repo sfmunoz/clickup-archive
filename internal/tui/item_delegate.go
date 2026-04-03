@@ -13,6 +13,10 @@ import (
 // https://github.com/charmbracelet/bubbles/tree/main/list
 // https://pkg.go.dev/github.com/charmbracelet/bubbles/list#ItemDelegate
 
+type itemDelegateMsg struct {
+	index int
+}
+
 type itemDelegate struct {
 	totStyles    int
 	itemStyle    [6]lipgloss.Style
@@ -48,8 +52,10 @@ func (d itemDelegate) Spacing() int {
 	return 0
 }
 
-func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd {
-	return nil
+func (d itemDelegate) Update(_ tea.Msg, l *list.Model) tea.Cmd {
+	return func() tea.Msg {
+		return itemDelegateMsg{index: l.Index()}
+	}
 }
 
 func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
