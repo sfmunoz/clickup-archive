@@ -56,14 +56,9 @@ func (i *Items) SetSize(w, h int) {
 }
 
 func (i *Items) Update(msg tea.Msg) (*Items, tea.Cmd) {
-	var cmds []tea.Cmd
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		var cmd tea.Cmd
-		i.list, cmd = i.list.Update(msg)
-		cmds = append(cmds, cmd)
-	}
-	return i, tea.Batch(cmds...)
+	var cmd tea.Cmd
+	i.list, cmd = i.list.Update(msg)
+	return i, cmd
 }
 
 func (i *Items) IsFiltering() bool {

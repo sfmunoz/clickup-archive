@@ -103,8 +103,11 @@ func (t *Tui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return t.updateWindowSize(msg)
 	case tea.KeyPressMsg:
 		return t.updateKeyPress(msg)
+	default:
+		var cmd tea.Cmd
+		t.items, cmd = t.items.Update(msg)
+		return t, cmd
 	}
-	return t, nil
 }
 
 func (t *Tui) View() tea.View {
