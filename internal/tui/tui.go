@@ -104,16 +104,20 @@ func (t *Tui) View() tea.View {
 	content := contentStyle.
 		Width(contentW - sidebarStyle.GetHorizontalFrameSize()).
 		Height(bodyH).
-		Render("Select a list to browse tasks\n\n" + t.stats.View())
+		Render("Select a list to browse tasks")
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
 		Render("q/ctrl-c: quit ; s: show/hide stats")
 	body := lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
 	screen := lipgloss.JoinVertical(lipgloss.Top, topbar, body, statusbar)
+	comp := lipgloss.NewCompositor(
+		lipgloss.NewLayer(screen).X(0).Y(0),
+		lipgloss.NewLayer(t.stats.View()).X(t.width/2-10).Y(t.height/2-5).Z(10), // FIXME hardcoded -10,-5 values
+	)
 	var v tea.View
 	v.AltScreen = true
-	v.SetContent(screen)
+	v.SetContent(comp.Render())
 	return v
 }
 
