@@ -14,14 +14,21 @@ type item struct {
 	title, desc string
 }
 
-func (i item) Title() string {
+func newItem(title, desc string) *item {
+	return &item{
+		title: title,
+		desc:  desc,
+	}
+}
+
+func (i *item) Title() string {
 	return i.title
 }
 
-func (i item) Description() string {
+func (i *item) Description() string {
 	return i.desc
 }
 
-func (i item) FilterValue() string {
+func (i *item) FilterValue() string {
 	return i.title
 }

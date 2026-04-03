@@ -38,7 +38,7 @@ func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd {
 }
 
 func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(item)
+	i, ok := listItem.(*item)
 	if !ok {
 		return
 	}

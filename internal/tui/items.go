@@ -19,17 +19,17 @@ type Items struct {
 func NewItems(a *archive.Archive) (*Items, error) {
 	items := make([]list.Item, 0)
 	for _, v1 := range a.Children {
-		items = append(items, item{title: ".." + v1.Data.ID, desc: v1.Data.Name})
+		items = append(items, newItem(v1.Data.ID, v1.Data.Name))
 		for _, v2 := range v1.Children {
-			items = append(items, item{title: "...." + v2.Data.ID, desc: v2.Data.Name})
+			items = append(items, newItem(".."+v2.Data.ID, v2.Data.Name))
 			for _, v3 := range v2.Children {
-				items = append(items, item{title: "......" + v3.Data.ID, desc: v3.Data.Name})
+				items = append(items, newItem("...."+v3.Data.ID, v3.Data.Name))
 				for _, v4 := range v3.Children {
-					items = append(items, item{title: "........" + v4.Data.ID, desc: v4.Data.Name})
+					items = append(items, newItem("......"+v4.Data.ID, v4.Data.Name))
 					for _, v5 := range v4.Children {
-						items = append(items, item{title: ".........." + v5.Data.ID, desc: v5.Data.Name})
+						items = append(items, newItem("........"+v5.Data.ID, v5.Data.Name))
 						for _, v6 := range v5.Children {
-							items = append(items, item{title: "............" + v6.Data.ID, desc: v6.Data.Text})
+							items = append(items, newItem(".........."+v6.Data.ID, v6.Data.Text))
 						}
 					}
 				}
