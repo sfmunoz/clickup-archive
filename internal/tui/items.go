@@ -66,6 +66,10 @@ func (i *Items) Update(msg tea.Msg) (*Items, tea.Cmd) {
 	return i, tea.Batch(cmds...)
 }
 
+func (i *Items) IsFiltering() bool {
+	return i.list.FilterState() == list.Filtering
+}
+
 func (i *Items) SelectedNode() any {
 	selected := i.list.SelectedItem()
 	if it, ok := selected.(*item); ok {

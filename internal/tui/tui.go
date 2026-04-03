@@ -68,6 +68,14 @@ func (t *Tui) updateWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 
 func (t *Tui) updateKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
+	if !t.statsVisible && t.items.IsFiltering() {
+		if msg.String() == "ctrl+c" {
+			return t, tea.Quit
+		}
+		var cmd tea.Cmd
+		t.items, cmd = t.items.Update(msg)
+		return t, cmd
+	}
 	switch msg.String() {
 	case "ctrl+c":
 		return t, tea.Quit
