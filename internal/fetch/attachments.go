@@ -34,8 +34,14 @@ func (f *FetchAttachments) processTask(task *archive.Task) error {
 		return fmt.Errorf("remove attachments dir for task %s: %w", task.Data.ID, err)
 	}
 
+	// Fetch fresh task data — the list endpoint omits attachment metadata
+	freshTask, err := f.client.GetTask(task.Data.ID)
+	if err != nil {
+		return fmt.Errorf("fetch task %s: %w", task.Data.ID, err)
+	}
+
 	total := 0
-	for _, att := range task.Data.Attachments {
+	for _, att := range freshTask.Attachments {
 		if att.Deleted {
 			continue
 		}

@@ -78,7 +78,7 @@ type TaskChecklist struct {
 
 type TaskAttachment struct {
 	ID               string      `json:"id"`
-	Version          string      `json:"version"`
+	Version          json.RawMessage `json:"version"`
 	Date             string      `json:"date"`
 	Title            string      `json:"title"`
 	Extension        string      `json:"extension"`

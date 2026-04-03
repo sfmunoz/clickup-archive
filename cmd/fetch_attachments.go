@@ -16,7 +16,7 @@ and the binary file is saved alongside it. A <task-id>/attachments.done marker f
 success; if it already exists the task is skipped. If it is absent, <task-id>/attachments/ is
 deleted and fully re-downloaded.
 
-Attachment metadata is read from the task's existing index.json — no extra API calls are needed.
+Each task is re-fetched from the API to retrieve attachment metadata (the list endpoint omits it).
 
 Requires the CLICKUP_TOKEN environment variable (personal API token).`,
 	RunE: func(cmd *cobra.Command, args []string) error {

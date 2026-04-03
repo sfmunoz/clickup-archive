@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/sfmunoz/clickup-archive/internal/api"
 	"github.com/sfmunoz/logit"
 )
 
@@ -76,4 +77,12 @@ func (c *Client) HttpGet(path string, out any) error {
 		return err
 	}
 	return json.Unmarshal(body, out)
+}
+
+func (c *Client) GetTask(taskID string) (*api.Task, error) {
+	var task api.Task
+	if err := c.HttpGet("/task/"+taskID, &task); err != nil {
+		return nil, err
+	}
+	return &task, nil
 }
