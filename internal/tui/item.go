@@ -35,7 +35,7 @@ func (i *item) Description() string {
 }
 
 func (i *item) FilterValue() string {
-	return i.title
+	return i.title + " " + i.desc
 }
 
 func (i *item) GetPos() int {
