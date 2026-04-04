@@ -32,7 +32,7 @@ func NewClient() (*Client, error) {
 	return &Client{token: token}, nil
 }
 
-func (c *Client) httpGetBytesOnce(url string) ([]byte, error) {
+func (c *Client) httpGetOnce(url string) ([]byte, error) {
 	time.Sleep(650 * time.Millisecond)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -54,11 +54,11 @@ func (c *Client) httpGetBytesOnce(url string) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) HttpGetBytes(url string) ([]byte, error) {
+func (c *Client) HttpGet(url string) ([]byte, error) {
 	var data []byte
 	for attempt := 1; attempt <= httpGetRetries; attempt++ {
 		var err error
-		data, err = c.httpGetBytesOnce(url)
+		data, err = c.httpGetOnce(url)
 		if err == nil {
 			break
 		}
@@ -71,8 +71,8 @@ func (c *Client) HttpGetBytes(url string) ([]byte, error) {
 	return data, nil
 }
 
-func (c *Client) HttpGet(path string, out any) error {
-	body, err := c.HttpGetBytes(baseURL + path)
+func (c *Client) HttpGetJson(path string, out any) error {
+	body, err := c.HttpGet(baseURL + path)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (c *Client) HttpGet(path string, out any) error {
 
 func (c *Client) GetTask(taskID string) (*api.Task, error) {
 	var task api.Task
-	if err := c.HttpGet("/task/"+taskID, &task); err != nil {
+	if err := c.HttpGetJson("/task/"+taskID, &task); err != nil {
 		return nil, err
 	}
 	return &task, nil

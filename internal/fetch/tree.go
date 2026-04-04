@@ -42,7 +42,7 @@ func (f *FetchTree) getTasks(listID string, archLi *archive.List) error {
 	for page := 0; ; page++ {
 		var resp api.TasksResponse
 		path := fmt.Sprintf("/list/%s/task?include_closed=true&subtasks=true&page=%d", listID, page)
-		if err := f.client.HttpGet(path, &resp); err != nil {
+		if err := f.client.HttpGetJson(path, &resp); err != nil {
 			return fmt.Errorf("fetch tasks page %d: %w", page, err)
 		}
 		for _, task := range resp.Tasks {
@@ -59,7 +59,7 @@ func (f *FetchTree) getTasks(listID string, archLi *archive.List) error {
 
 func (f *FetchTree) getLists(folderID string, archFo *archive.Folder) error {
 	var resp api.ListsResponse
-	if err := f.client.HttpGet("/folder/"+folderID+"/list", &resp); err != nil {
+	if err := f.client.HttpGetJson("/folder/"+folderID+"/list", &resp); err != nil {
 		return fmt.Errorf("fetch lists: %w", err)
 	}
 	for _, list := range resp.Lists {
@@ -77,7 +77,7 @@ func (f *FetchTree) getLists(folderID string, archFo *archive.Folder) error {
 
 func (f *FetchTree) getFolders(spaceID string, archSp *archive.Space) error {
 	var resp api.FoldersResponse
-	if err := f.client.HttpGet("/space/"+spaceID+"/folder", &resp); err != nil {
+	if err := f.client.HttpGetJson("/space/"+spaceID+"/folder", &resp); err != nil {
 		return fmt.Errorf("fetch folders: %w", err)
 	}
 	for _, folder := range resp.Folders {
@@ -95,7 +95,7 @@ func (f *FetchTree) getFolders(spaceID string, archSp *archive.Space) error {
 
 func (f *FetchTree) getSpaces(workspaceID string, archWs *archive.Workspace) error {
 	var resp api.SpacesResponse
-	if err := f.client.HttpGet("/team/"+workspaceID+"/space", &resp); err != nil {
+	if err := f.client.HttpGetJson("/team/"+workspaceID+"/space", &resp); err != nil {
 		return fmt.Errorf("fetch spaces: %w", err)
 	}
 	for _, space := range resp.Spaces {
@@ -113,7 +113,7 @@ func (f *FetchTree) getSpaces(workspaceID string, archWs *archive.Workspace) err
 
 func (f *FetchTree) Run() error {
 	var resp api.WorkspacesResponse
-	if err := f.client.HttpGet("/team", &resp); err != nil {
+	if err := f.client.HttpGetJson("/team", &resp); err != nil {
 		return fmt.Errorf("fetch workspaces: %w", err)
 	}
 	for _, workspace := range resp.Workspaces {

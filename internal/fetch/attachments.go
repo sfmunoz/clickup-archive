@@ -54,7 +54,7 @@ func (f *FetchAttachments) processTask(task *archive.Task) error {
 			total++
 			continue
 		}
-		data, err := f.client.HttpGetBytes(att.URLWithQuery)
+		data, err := f.client.HttpGet(att.URLWithQuery)
 		if err != nil {
 			return fmt.Errorf("download attachment %s for task %s: %w", att.ID, task.Data.ID, err)
 		}

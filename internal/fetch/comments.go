@@ -36,7 +36,7 @@ func (f *FetchComments) fetchAllComments(task *archive.Task) (int, error) {
 			path += "?start=" + startDate + "&start_id=" + startID
 		}
 		log.Info("fetching", "path", path)
-		if err := f.client.HttpGet(path, &resp); err != nil {
+		if err := f.client.HttpGetJson(path, &resp); err != nil {
 			return total, fmt.Errorf("fetch comments for task %s: %w", taskID, err)
 		}
 		if len(resp.Comments) == 0 {
