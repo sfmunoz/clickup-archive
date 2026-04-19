@@ -8,14 +8,14 @@ import (
 )
 
 func clickupDir() string {
-	return filepath.Join(os.Getenv("HOME"), "src", "clickup")
+	return filepath.Join(os.Getenv("HOME"), ".archive", "clickup")
 }
 
 var rootCmd = &cobra.Command{
 	Use:   "clickup-archive",
 	Short: "Archive ClickUp workspaces to local JSON files",
 	Long: `clickup-archive fetches the full ClickUp hierarchy via API v2
-and writes each entity as index.json under $HOME/src/clickup/<id>/.
+and writes each entity as index.json under $HOME/.archive/clickup/<id>/.
 
 The traversal order is: workspaces → spaces → folders → lists → tasks.
 Subtasks are fetched recursively and stored alongside their siblings.

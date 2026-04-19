@@ -10,7 +10,7 @@ var treeCmd = &cobra.Command{
 	Use:   "tree",
 	Short: "Traverse and dump the full ClickUp hierarchy",
 	Long: `Walks the complete ClickUp hierarchy and writes each entity as
-index.json under $HOME/src/clickup/<id>/:
+index.json under $HOME/.archive/clickup/<id>/:
 
   workspaces → spaces → folders → lists → tasks (+ subtasks)
 
