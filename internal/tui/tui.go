@@ -136,7 +136,7 @@ func (t *Tui) View() tea.View {
 	statusbar := statusbarStyle.
 		Width(t.width).
 		Height(statusbarH).
-		Render("q/ctrl-c: quit ; F1: show/hide stats")
+		Render("q/ctrl-c: quit ; F1: show/hide stats ; +/-: expand/collapse")
 	mainScreen := lipgloss.JoinVertical(
 		lipgloss.Top,
 		topbar,

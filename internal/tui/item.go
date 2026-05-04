@@ -11,18 +11,21 @@ package tui
 // }
 
 type item struct {
-	node        any
-	title, desc string
-	pos, level  int
+	node                 any
+	title, desc          string
+	pos, level           int
+	expandable, expanded bool
 }
 
-func newItem(node any, title, desc string, pos, level int) *item {
+func newItem(node any, title, desc string, pos, level int, expandable, expanded bool) *item {
 	return &item{
-		node:  node,
-		title: title,
-		desc:  desc,
-		pos:   pos,
-		level: level,
+		node:       node,
+		title:      title,
+		desc:       desc,
+		pos:        pos,
+		level:      level,
+		expandable: expandable,
+		expanded:   expanded,
 	}
 }
 
@@ -44,4 +47,12 @@ func (i *item) GetPos() int {
 
 func (i *item) GetLevel() int {
 	return i.level
+}
+
+func (i *item) IsExpandable() bool {
+	return i.expandable
+}
+
+func (i *item) IsExpanded() bool {
+	return i.expanded
 }

@@ -60,5 +60,12 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		pref = "> "
 		s = d.selItemStyle[n]
 	}
-	fmt.Fprint(w, s.Render(fmt.Sprintf("%s %2d. %s (%d)", pref, i.GetPos()+1, i.Title(), index+1)))
+	marker := " "
+	if i.IsExpandable() {
+		marker = "+"
+		if i.IsExpanded() {
+			marker = "-"
+		}
+	}
+	fmt.Fprint(w, s.Render(fmt.Sprintf("%s%s %2d. %s (%d)", pref, marker, i.GetPos()+1, i.Title(), index+1)))
 }
